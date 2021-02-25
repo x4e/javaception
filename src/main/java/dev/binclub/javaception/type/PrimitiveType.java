@@ -1,6 +1,7 @@
 package dev.binclub.javaception.type;
 
 public final class PrimitiveType extends Type {
+	public static final PrimitiveType VOID = new PrimitiveType("V");
 	public static final PrimitiveType BYTE = new PrimitiveType("B");
 	public static final PrimitiveType SHORT = new PrimitiveType("S");
 	public static final PrimitiveType INT = new PrimitiveType("I");

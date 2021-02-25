@@ -37,4 +37,34 @@ public class TypeTests {
 		assertThrows(IllegalArgumentException.class, () -> Type.parseFieldDescriptor("V"));
 		assertThrows(IllegalArgumentException.class, () -> Type.parseFieldDescriptor("java/lang/Object"));
 	}
+	
+	@Test
+	public void testMethodDescriptors() {
+		assertArrayEquals(
+			Type.parseMethodArguments("(Ljava/lang/Object;ZI)V"),
+			new Type[]{new ClassType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT}
+		);
+		assertArrayEquals(
+			Type.parseMethodArguments("(Ljava/lang/Object;[[[Z)V"),
+			new Type[]{new ClassType("java/lang/Object"), new ArrayType(3, PrimitiveType.BYTE)}
+		);
+		
+		assertEquals(Type.parseMethodReturnType("()V"), PrimitiveType.VOID);
+		assertEquals(Type.parseMethodReturnType("()Ljava/lang/Object;"), new ClassType("java/lang/Object"));
+	}
+	
+	@Test
+	public void testInvalidMethodDescriptors() {
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodArguments("I"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodArguments("(I"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodArguments("O"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodArguments("(O)O"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodArguments("(Lhello;LnopeIB)V"));
+		
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodReturnType("()O"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodReturnType("()"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodReturnType("()Ljava/lang/Object"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodReturnType("()java/lang/Object;"));
+		assertThrows(IllegalArgumentException.class, () -> Type.parseMethodReturnType("()hello"));
+	}
 }
