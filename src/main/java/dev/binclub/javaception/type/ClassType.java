@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class ClassType extends Type {
 	/**
-	 * Binary name (/). Does *not* include L; surrounding.
+	 * Internal (/) name. Does *not* include L; surrounding.
 	 */
 	public final String name;
 	
