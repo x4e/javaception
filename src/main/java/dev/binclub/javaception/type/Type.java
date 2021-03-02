@@ -3,6 +3,13 @@ package dev.binclub.javaception.type;
 import java.util.ArrayList;
 
 public abstract class Type {
+	public static ClassType classType(String className) {
+		if (className.length() < 1 || className.charAt(className.length() - 1) == ';') {
+			throw new IllegalArgumentException();
+		}
+		return new ClassType(className);
+	}
+	
 	/**
 	 * Parse a field descriptor according to JVMS 4.3.2.
 	 * This does not support parameters or void.

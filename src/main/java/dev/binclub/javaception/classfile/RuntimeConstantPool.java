@@ -1,21 +1,17 @@
 package dev.binclub.javaception.classfile;
 
 public class RuntimeConstantPool {
-	private byte[] cp;
-	private int offset;
-	private int items;
+	private CpEntry<?>[] cp;
 	
-	public RuntimeConstantPool(byte[] cp, int offset, int items) {
+	public RuntimeConstantPool(CpEntry<?>[] cp) {
 		this.cp = cp;
-		this.offset = offset;
-		this.items = items;
 	}
 	
 	private abstract static class CpEntry<T> {
 		public abstract T resolve();
 	}
 	
-	private static class ClassInfo extends CpEntry<Class> {
+	private static class ClassInfo extends CpEntry<Klass> {
 		String binaryName;
 		public ClassInfo(String binaryName) {
 			this.binaryName = binaryName;
@@ -24,7 +20,7 @@ public class RuntimeConstantPool {
 			}
 		}
 		@Override
-		public Class resolve() {
+		public Klass resolve() {
 			if (binaryName.startsWith("[")) {
 				// array type
 			}
