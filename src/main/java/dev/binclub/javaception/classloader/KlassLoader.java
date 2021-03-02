@@ -72,15 +72,10 @@ public class KlassLoader {
 				
 				// First, the Java Virtual Machine determines whether classLoader has already been recorded as an
 				// initiating loader of a class or interface denoted by name. If so, no class creation is necessary.
-				Map<String, Klass> cache = classCache.get(classLoader);
-				if (cache != null) {
-					Klass cached = cache.get(name);
-					if (cached != null) {
-						return cached;
-					}
-				} else {
-					cache = new HashMap<>();
-					classCache.put(classLoader, cache);
+				Map<String, Klass> cache = getCache(classLoader);
+				Klass cached = cache.get(name);
+				if (cached != null) {
+					return cached;
 				}
 				
 				// TODO: Otherwise, the Java Virtual Machine invokes loadClass(name) on classLoader.
