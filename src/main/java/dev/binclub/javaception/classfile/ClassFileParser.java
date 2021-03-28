@@ -17,7 +17,8 @@ public class ClassFileParser {
 
 	// for testing purposes
 	public static void main(String[] args) throws Throwable {
-		InputStream stream = ClassFileParser.class.getClassLoader().getResourceAsStream("klass/ClassReader.class");
+		InputStream stream = ClassFileParser.class.getClassLoader()
+				.getResourceAsStream("dev/binclub/javaception/classfile/ClassFileParser.class");
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		int available = 0;
 		while ((available = stream.available()) != 0) {
@@ -30,7 +31,7 @@ public class ClassFileParser {
 	}
 
 	// the value of the tag byte acts as the index to get the type
-	public static final ConstantTypes[] types = new ConstantTypes[19];
+	public static final ConstantTypes[] types = new ConstantTypes[21];
 
 	int constantPoolCount;
 	int majorVersion;
@@ -52,7 +53,7 @@ public class ClassFileParser {
 	public ClassFileParser(byte[] classBytes) throws Throwable {
 		if (classBytes.length < 4) {
 			// need atleast 4 bytes get magic number
-			throw new Throwable("Invalid class file");
+			throw new ClassFormatError();
 		}
 
 		parseClass(classBytes);
@@ -60,18 +61,17 @@ public class ClassFileParser {
 	}
 
 	public void parseClass(byte[] classBytes) throws Throwable {
-
 		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
 		int magic = dis.readInt();
 		if (magic != 0xCAFEBABE) {
-			throw new Throwable("Invalid Class File");
+			throw new ClassFormatError();
 		}
 		minorVersion = dis.readUnsignedShort();
 		majorVersion = dis.readUnsignedShort();
 		constantPoolCount = dis.readUnsignedShort();
 		constantPool = new Object[constantPoolCount - 1];
 		// force enum to resolve
-		System.out.println(ConstantTypes.values().length);
+		ConstantTypes.values();
 		parseConstantPool();
 		access = dis.readUnsignedShort();
 		int classNameIndex = dis.readUnsignedShort();
@@ -152,7 +152,7 @@ public class ClassFileParser {
 		default:
 			System.out.println("skipping attrib type " + name);
 			for (int i = 0; i < attributeLength; i++) {
-				dis.readUnsignedByte();
+				dis.skipBytes(i);
 			}
 			break;
 		}
@@ -179,8 +179,9 @@ public class ClassFileParser {
 				constantPool[i] = dis.readDouble();
 				break;
 			case FIELDREF:
-				dis.readInt();
-				constantPool[i] = type;
+				int classIndex = dis.readUnsignedShort();
+				int nameAndTypeIndex = dis.readUnsignedShort();
+				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
 				break;
 			case FLOAT:
 				constantPool[i] = dis.readFloat();
@@ -189,43 +190,60 @@ public class ClassFileParser {
 				constantPool[i] = dis.readInt();
 				break;
 			case INTERFACEMETHODREF:
-				dis.readInt();
-				constantPool[i] = type;
+				classIndex = dis.readUnsignedShort();
+				nameAndTypeIndex = dis.readUnsignedShort();
+				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
 				break;
 			case INVOKEDYNAMIC:
-				dis.readInt();
-				constantPool[i] = type;
+				int bootstrapMethodAttrIndex = dis.readUnsignedShort();
+				nameAndTypeIndex = dis.readUnsignedShort();
+				constantPool[i] = new InvokeDynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);
 				break;
 			case LONG:
 				constantPool[i] = dis.readLong();
 				break;
 			case METHODHANDLE:
-				dis.readUnsignedByte();
-				dis.readUnsignedShort();
-				constantPool[i] = type;
+				int referenceKind = dis.readUnsignedByte();
+				int referenceIndex = dis.readUnsignedShort();
+				constantPool[i] = new MethodHandleInfo(referenceKind, referenceIndex);
 				break;
 			case METHODREF:
-				dis.readInt();
-				constantPool[i] = type;
+				classIndex = dis.readUnsignedShort();
+				nameAndTypeIndex = dis.readUnsignedShort();
+				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
 				break;
 			case METHODTYPE:
-				dis.readUnsignedShort();
-				constantPool[i] = type;
+				int descriptorIndex = dis.readUnsignedShort();
+				constantPool[i] = new MethodTypeInfo(descriptorIndex);
 				break;
 			case NAMEANDTYPE:
-				dis.readInt();
-				constantPool[i] = type;
+				int nameIndex = dis.readUnsignedShort();
+				descriptorIndex = dis.readUnsignedShort();
+				constantPool[i] = new NameAndTypeInfo(nameIndex, descriptorIndex);
 				break;
 			case STRING:
-				dis.readUnsignedShort();
-				constantPool[i] = type;
+				int stringIndex = dis.readUnsignedShort();
+				constantPool[i] = new UnresolvedString(stringIndex);
 				break;
 			case UTF8:
 				constantPool[i] = dis.readUTF();
 				break;
+			case DYNAMIC:
+				bootstrapMethodAttrIndex = dis.readUnsignedShort();
+				nameAndTypeIndex = dis.readUnsignedShort();
+				constantPool[i] = new DynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);
+				break;
 			default:
 				System.out.println("Unsupported constant type : " + tag);
 				break;
+
+			}
+		}
+		// resolves strings
+		for (int i = 0; i < constantPool.length; i++) {
+			if (constantPool[i] instanceof UnresolvedString) {
+				UnresolvedString us = (UnresolvedString) constantPool[i];
+				constantPool[i] = (String) constantPool[us.stringIndex - 1];
 
 			}
 		}

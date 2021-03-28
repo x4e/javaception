@@ -1,18 +1,20 @@
 package dev.binclub.javaception.classfile;
 
-public class NameAndTypeInfo extends CpInitializable<Void>{
-
+public class NameAndTypeInfo {
 	int nameIndex;
 	int descriptorIndex;
-	
-	@Override
-	public void initialize() {
-		
+
+	public NameAndTypeInfo(int nameIndex, int descriptorIndex) {
+		this.nameIndex = nameIndex;
+		this.descriptorIndex = descriptorIndex;
 	}
 
-	@Override
-	public Void resolve() {
-		return null;
+	public String getName(Object[] constantPool) {
+		return (String) constantPool[nameIndex - 1];
 	}
-	
+
+	public String getDescription(Object[] constantPool) {
+		return (String) constantPool[descriptorIndex - 1];
+	}
+
 }

@@ -1,11 +1,9 @@
 package dev.binclub.javaception.classfile;
 
-import java.io.IOException;
-
 public abstract class AttributeInfo {
 	public int attributeNameIndex, attributeLength;
 
-	public AttributeInfo(int attributeNameIndex, int attributeLength) throws IOException{
+	public AttributeInfo(int attributeNameIndex, int attributeLength) {
 		this.attributeNameIndex = attributeNameIndex;
 		this.attributeLength = attributeLength;
 	}
