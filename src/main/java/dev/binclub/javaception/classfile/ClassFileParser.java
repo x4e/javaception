@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 import dev.binclub.javaception.classfile.attributes.ExceptionsAttribute;
@@ -102,11 +104,13 @@ public class ClassFileParser {
 			int nameIndex = dis.readUnsignedShort();
 			int descriptorIndex = dis.readUnsignedShort();
 			int attributesCount = dis.readUnsignedShort();
-			AttributeInfo[] attributes = null;
+			List<AttributeInfo> attributes = new ArrayList<>();
 			if (attributesCount != 0) {
-				attributes = new AttributeInfo[attributesCount];
 				for (int j = 0; j < attributesCount; j++) {
-					attributes[j] = readAttribute(dis, constantPool);
+					AttributeInfo attribute = readAttribute(dis, constantPool);
+					if(attribute != null) {
+						attributes.add(attribute);
+					}
 				}
 			}
 			methods[i] = new MethodInfo(access, nameIndex, descriptorIndex, attributes);
@@ -121,11 +125,13 @@ public class ClassFileParser {
 			int nameIndex = dis.readUnsignedShort();
 			int descriptorIndex = dis.readUnsignedShort();
 			int attributesCount = dis.readUnsignedShort();
-			AttributeInfo[] attributes = null;
+			List<AttributeInfo> attributes = new ArrayList<>();
 			if (attributesCount != 0) {
-				attributes = new AttributeInfo[attributesCount];
 				for (int j = 0; j < attributesCount; j++) {
-					attributes[j] = readAttribute(dis, constantPool);
+					AttributeInfo attribute = readAttribute(dis, constantPool);
+					if(attribute != null) {
+						attributes.add(attribute);
+					}
 				}
 			}
 			fields[i] = new FieldInfo(access, nameIndex, descriptorIndex, attributes);
