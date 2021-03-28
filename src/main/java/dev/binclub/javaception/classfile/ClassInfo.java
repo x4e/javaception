@@ -1,26 +1,15 @@
 package dev.binclub.javaception.classfile;
 
-public class ClassInfo extends CpInitializable<Klass> {
+public class ClassInfo {
 
 	int nameIndex;
-	Object[] constantPool;
-	String binaryName;
 
-	public ClassInfo(int nameIndex, Object[] constantPool) {
+	public ClassInfo(int nameIndex) {
 		this.nameIndex = nameIndex;
-		this.constantPool = constantPool;
 	}
 
-	@Override
-	public Klass resolve() {
-		if (binaryName.startsWith("[")) {
-			// array type
-		}
-		return null;
+	public String getClassName(Object[] cp) {
+		return (String) cp[nameIndex - 1];
 	}
 
-	@Override
-	public void initialize() {
-		binaryName = (String) constantPool[nameIndex - 1];
-	}
 }
