@@ -1,6 +1,5 @@
 package dev.binclub.javaception.classfile;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -39,7 +38,7 @@ public class OpcodeStride {
 		strideAmount[0xc5] = 3;
 		setRange(0xc6, 0xc7, 2);
 		setRange(0xc8, 0xc9, 4);
-
+		initialized = true;
 	}
 
 	public static int getStrideAmount(int opcode, int byteCount, int[] instructions) throws IOException {
