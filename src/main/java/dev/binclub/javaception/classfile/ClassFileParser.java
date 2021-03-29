@@ -108,7 +108,7 @@ public class ClassFileParser {
 			if (attributesCount != 0) {
 				for (int j = 0; j < attributesCount; j++) {
 					AttributeInfo attribute = readAttribute(dis, constantPool);
-					if(attribute != null) {
+					if (attribute != null) {
 						attributes.add(attribute);
 					}
 				}
@@ -129,7 +129,7 @@ public class ClassFileParser {
 			if (attributesCount != 0) {
 				for (int j = 0; j < attributesCount; j++) {
 					AttributeInfo attribute = readAttribute(dis, constantPool);
-					if(attribute != null) {
+					if (attribute != null) {
 						attributes.add(attribute);
 					}
 				}
@@ -157,9 +157,7 @@ public class ClassFileParser {
 			return new SourceFileAttribute(attributeNameIndex, attributeLength, dis);
 		default:
 			System.out.println("skipping attrib type " + name);
-			for (int i = 0; i < attributeLength; i++) {
-				dis.skipBytes(i);
-			}
+			dis.skipBytes(attributeLength);
 			break;
 		}
 		return null;
