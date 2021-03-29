@@ -16,8 +16,6 @@ public class CodeAttribute extends AttributeInfo {
 	int maxLocals;
 	int codeLength;
 	int[] code;
-	//contains the index of every instruction
-	List<Integer> instructionIndexes = new ArrayList<>();
 	int exceptionTableLength;
 	ExceptionData[] exceptions;
 	int attributesCount;
@@ -32,16 +30,6 @@ public class CodeAttribute extends AttributeInfo {
 		code = new int[codeLength];
 		for (int i = 0; i < codeLength; i++) {
 			code[i] = dis.readUnsignedByte();
-		}
-		int instructionPointer = 0;
-		for (int i = 0; i < codeLength; i++) {
-			int byt = code[i];
-			if (i == instructionPointer) {
-				instructionIndexes.add(i);
-				int stride = OpcodeStride.getStrideAmount(byt, i, code);
-				instructionPointer += stride + 1;
-			}
-
 		}
 		exceptionTableLength = dis.readUnsignedShort();
 		if (exceptionTableLength != 0) {
@@ -61,6 +49,18 @@ public class CodeAttribute extends AttributeInfo {
 				attributes[i] = ClassFileParser.readAttribute(dis, constantPool);
 			}
 		}
+	}
+	
+	public int getMaxStack() {
+		return maxStack;
+	}
+	
+	public int getMaxLocals() {
+		return maxLocals;
+	}
+	
+	public int[] getCode() {
+		return code;
 	}
 
 }
