@@ -4,40 +4,37 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import dev.binclub.javaception.classfile.AttributeInfo;
-import dev.binclub.javaception.classfile.MethodHandleInfo;
+import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
 
 public class BootstrapMethodsAttribute extends AttributeInfo {
 
 	int numBootstrapMethods;
 	BootstrapMethod[] bootstrapMethods;
 
-	public BootstrapMethodsAttribute(int attributeNameIndex, int attributeLength, DataInputStream dis,
-			Object[] constantPool) throws IOException {
-		super(attributeNameIndex, attributeLength);
+	public BootstrapMethodsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
+			throws IOException {
+		super("BootstrapMethods", attributeLength);
 		numBootstrapMethods = dis.readUnsignedShort();
 		bootstrapMethods = new BootstrapMethod[numBootstrapMethods];
 		for (int i = 0; i < numBootstrapMethods; i++) {
 			int bootstrapMethodRef = dis.readUnsignedShort();
+			MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constantPool[bootstrapMethodRef - 1];
 			int numBootstrapArguments = dis.readUnsignedShort();
-			MethodHandleInfo[] bootstrapArguments = new MethodHandleInfo[numBootstrapArguments];
+			Object[] bootstrapArguments = new Object[numBootstrapArguments];
 			for (int j = 0; j < numBootstrapArguments; j++) {
 				int index = dis.readUnsignedShort();
-				bootstrapArguments[j] = (MethodHandleInfo) constantPool[index - 1];
+				bootstrapArguments[j] = constantPool[index - 1];
 			}
-			bootstrapMethods[i] = new BootstrapMethod(bootstrapMethodRef, numBootstrapArguments, bootstrapArguments);
+			bootstrapMethods[i] = new BootstrapMethod(methodHandleInfo, bootstrapArguments);
 		}
 	}
 
 	public static class BootstrapMethod {
-		int bootstrapMethodRef;
-		int numBootstrapArguments;
-		MethodHandleInfo[] bootstrapArguments;
+		MethodHandleInfo bootstrapMethodRef;
+		Object[] bootstrapArguments;
 
-		public BootstrapMethod(int bootstrapMethodRef, int numBootstrapArguments,
-				MethodHandleInfo[] bootstrapArguments) {
-			super();
+		public BootstrapMethod(MethodHandleInfo bootstrapMethodRef, Object[] bootstrapArguments) {
 			this.bootstrapMethodRef = bootstrapMethodRef;
-			this.numBootstrapArguments = numBootstrapArguments;
 			this.bootstrapArguments = bootstrapArguments;
 		}
 

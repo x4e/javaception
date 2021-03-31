@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import dev.binclub.javaception.classfile.AttributeInfo;
-import dev.binclub.javaception.classfile.ClassInfo;
+import dev.binclub.javaception.classfile.constants.ClassInfo;
 
 
 public class ExceptionsAttribute extends AttributeInfo {
@@ -12,9 +12,9 @@ public class ExceptionsAttribute extends AttributeInfo {
 	int numberOfExceptions;
 	ClassInfo[] exceptionIndexTable;
 
-	public ExceptionsAttribute(int attributeNameIndex, int attributeLength, DataInputStream dis, Object[] constantPool)
+	public ExceptionsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
 			throws IOException {
-		super(attributeNameIndex, attributeLength);
+		super("Exceptions", attributeLength);
 		numberOfExceptions = dis.readUnsignedShort();
 		if (numberOfExceptions != 0) {
 			exceptionIndexTable = new ClassInfo[numberOfExceptions];

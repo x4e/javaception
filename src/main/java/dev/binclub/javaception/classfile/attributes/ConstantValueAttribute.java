@@ -10,8 +10,8 @@ public class ConstantValueAttribute extends AttributeInfo {
 
 	int constantValueIndex;
 
-	public ConstantValueAttribute(int attributeNameIndex, int attributeLength, DataInputStream dis) throws IOException {
-		super(attributeNameIndex, attributeLength);
+	public ConstantValueAttribute(String name, int attributeLength, DataInputStream dis) throws IOException {
+		super(name, attributeLength);
 		constantValueIndex = dis.readUnsignedShort();
 	}
 

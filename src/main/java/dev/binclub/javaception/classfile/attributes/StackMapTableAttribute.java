@@ -9,8 +9,8 @@ public class StackMapTableAttribute extends AttributeInfo {
 
 	int numberOfEntries;
 
-	public StackMapTableAttribute(int attributeNameIndex, int attributeLength, DataInputStream dis) throws IOException {
-		super(attributeNameIndex, attributeLength);
+	public StackMapTableAttribute(int attributeLength, DataInputStream dis) throws IOException {
+		super("StackMapTable", attributeLength);
 		numberOfEntries = dis.readUnsignedShort();
 		dis.skipBytes(attributeLength - 2);
 	}
