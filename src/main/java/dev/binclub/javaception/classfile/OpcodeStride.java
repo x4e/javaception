@@ -1,86 +1,72 @@
 package dev.binclub.javaception.classfile;
 
-import java.util.Arrays;
+import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
 public class OpcodeStride {
+	// number of bytes an opcodes operands take
+	// -1 for variable length operands
+	static int[] strideAmount = new int[OPC_MAX];
 	
-	static boolean initialized = false;
-	// number of bytes this opcode takes e.g bipush 1byte
-	// index correlates to bytecode
-	static int[] strideAmount = new int[256];
-	
-	static void init() {
-		// this method only needs to be ran once
-		if (initialized) {
-			return;
-		}
-		Arrays.fill(strideAmount, 0);
-		strideAmount[0x10] = 1;
-		strideAmount[0x11] = 2;
-		strideAmount[0x12] = 1;
-		strideAmount[0x13] = 2;
-		strideAmount[0x14] = 2;
-		setRange(0x15, 0x19, 1);
-		setRange(0x36, 0x3a, 1);
-		strideAmount[0x84] = 2;// inc
-		setRange(0x99, 0xa8, 2);
-		strideAmount[0xa9] = 1;// ret
-		strideAmount[0xaa] = -1;
-		strideAmount[0xab] = -1;
-		setRange(0xb2, 0xb8, 2);
-		strideAmount[0xb9] = 4;
-		strideAmount[0xba] = 4;
-		strideAmount[0xbb] = 2;
-		strideAmount[0xbc] = 1;
-		strideAmount[0xbd] = 2;
-		setRange(0xc0, 0xc1, 2);
-		strideAmount[0xc4] = -1;
-		strideAmount[0xc5] = 3;
-		setRange(0xc6, 0xc7, 2);
-		setRange(0xc8, 0xc9, 4);
-		initialized = true;
+	static {
+		strideAmount[BIPUSH] = 1;
+		strideAmount[SIPUSH] = 2;
+		strideAmount[LDC] = 1;
+		strideAmount[LDC_W] = 2;
+		strideAmount[LDC2_W] = 2;
+		setRange(ILOAD, ALOAD, 1);
+		setRange(ISTORE, ASTORE, 1);
+		strideAmount[IINC] = 2;
+		setRange(IFEQ, JSR, 2);
+		strideAmount[RET] = 1;
+		strideAmount[TABLESWITCH] = -1;
+		strideAmount[LOOKUPSWITCH] = -1;
+		setRange(GETSTATIC, INVOKESTATIC, 2);
+		strideAmount[INVOKEINTERFACE] = 4;
+		strideAmount[INVOKEDYNAMIC] = 4;
+		strideAmount[NEW] = 2;
+		strideAmount[NEWARRAY] = 1;
+		strideAmount[ANEWARRAY] = 2;
+		setRange(CHECKCAST, INSTANCEOF, 2);
+		strideAmount[WIDE] = -1;
+		strideAmount[MULTIANEWARRAY] = 3;
+		setRange(IFNULL, IFNONNULL, 2);
+		setRange(GOTO_W, JSR_W, 4);
 	}
 	
-	public static int getStrideAmount(int opcode, int byteCount, int[] instructions) {
-		init();
+	public static int getStrideAmount(int opcode, int offset, int[] instructions) {
 		int stride = strideAmount[opcode];
 		
 		if (stride != -1) {
 			return stride;
 		}
-		// wide
-		if (opcode == 0xc4) {
-			int opcodeW = instructions[byteCount + 1];
-			// inc
-			if (opcodeW == 0x84) {
+		if (opcode == WIDE) {
+			int opcodeW = instructions[offset + 1];
+			if (opcodeW == IINC) {
 				return 4;
-			}
-			else {
+			} else {
 				return 2;
 			}
 		}
-		// tableswitch
-		if (opcode == 0xaa) {
-			int padAmount = (byteCount + 1) % 4;
+		if (opcode == TABLESWITCH) {
+			int padAmount = (offset + 1) % 4;
 			if (padAmount != 0) {
 				padAmount = 4 - padAmount;
 			}
 			stride += padAmount;
 			stride += 12;
 			// default
-			int low = getInt(byteCount + padAmount + 4, instructions);
-			int high = getInt(byteCount + padAmount + 8, instructions);
+			int low = getInt(offset + padAmount + 4, instructions);
+			int high = getInt(offset + padAmount + 8, instructions);
 			int jumpOffsetCount = high - low + 1;
 			stride += jumpOffsetCount * 4;
 		}
-		// lookupswitch
-		if (opcode == 0xab) {
-			int padAmount = (byteCount + 1) % 4;
+		if (opcode == LOOKUPSWITCH) {
+			int padAmount = (offset + 1) % 4;
 			if (padAmount != 0) {
 				padAmount = 4 - padAmount;
 			}
 			stride += padAmount;
-			int npairsCount = getInt(byteCount + padAmount + 4, instructions);
+			int npairsCount = getInt(offset + padAmount + 4, instructions);
 			stride += 8;
 			stride += npairsCount * 8;
 		}

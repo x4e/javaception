@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
 public class ClassFileParser {
+	private static final int FIRST_SUPPORTED_VERSION = V1_2;
+	private static final int LAST_SUPPORTED_VERSION = V16;
 	
 	// public for testing
 	public Object[] constantPool;
@@ -43,13 +45,49 @@ public class ClassFileParser {
 	AttributeInfo[] attributes;
 	
 	public ClassFileParser(byte[] classBytes, InstanceOop loader) throws Throwable {
-		if (classBytes.length < 4) {
-			// need atleast 4 bytes get magic number
+		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
+		
+		if (dis.readInt() != CLASS_MAGIC) {
 			throw new ClassFormatError();
 		}
 		
-		parseClass(classBytes, loader);
+		minorVersion = dis.readUnsignedShort();
+		majorVersion = dis.readUnsignedShort();
+		if (majorVersion > LAST_SUPPORTED_VERSION || majorVersion < FIRST_SUPPORTED_VERSION) {
+			throw new UnsupportedClassVersionError("Unsupported class file version: " + majorVersion + "." + minorVersion);
+		}
 		
+		constantPoolCount = dis.readUnsignedShort();
+		constantPool = new Object[constantPoolCount - 1];
+		parseConstantPool();
+		
+		access = dis.readUnsignedShort();
+		
+		int classNameIndex = dis.readUnsignedShort();
+		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName();
+		int superClassNameIndex = dis.readUnsignedShort();
+		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName();
+		
+		int interfacesCount = dis.readUnsignedShort();
+		interfaces = new Klass[interfacesCount];
+		for (int i = 0; i < interfacesCount; i++) {
+			interfaces[i] = KlassLoader.loadClass(loader, (String) constantPool[dis.readUnsignedShort() - 1]);
+		}
+		
+		if ((access & ACC_MODULE) != 0) {
+			throw new NoClassDefFoundError("%s is not a class because access_flag ACC_MODULE is set".formatted(className));
+		}
+		
+		
+		fieldsCount = dis.readUnsignedShort();
+		readFields();
+		methodsCount = dis.readUnsignedShort();
+		readMethods();
+		attributesCount = dis.readUnsignedShort();
+		attributes = new AttributeInfo[attributesCount];
+		for (int i = 0; i < attributesCount; i++) {
+			attributes[i] = readAttribute(dis, constantPool);
+		}
 	}
 	
 	public static AttributeInfo readAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
@@ -86,41 +124,6 @@ public class ClassFileParser {
 	
 	public static String appendTest(String text) {
 		return "hello " + text;
-	}
-	
-	public void parseClass(byte[] classBytes, InstanceOop loader) throws Throwable {
-		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
-		int magic = dis.readInt();
-		if (magic != 0xCAFEBABE) {
-			throw new ClassFormatError();
-		}
-		minorVersion = dis.readUnsignedShort();
-		majorVersion = dis.readUnsignedShort();
-		constantPoolCount = dis.readUnsignedShort();
-		constantPool = new Object[constantPoolCount - 1];
-		// force enum to resolve
-		parseConstantPool();
-		access = dis.readUnsignedShort();
-		int classNameIndex = dis.readUnsignedShort();
-		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName();
-		int superClassNameIndex = dis.readUnsignedShort();
-		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName();
-		
-		int interfacesCount = dis.readUnsignedShort();
-		interfaces = new Klass[interfacesCount];
-		for (int i = 0; i < interfacesCount; i++) {
-			interfaces[i] = KlassLoader.loadClass(loader, (String) constantPool[dis.readUnsignedShort() - 1]);
-		}
-		
-		fieldsCount = dis.readUnsignedShort();
-		readFields();
-		methodsCount = dis.readUnsignedShort();
-		readMethods();
-		attributesCount = dis.readUnsignedShort();
-		attributes = new AttributeInfo[attributesCount];
-		for (int i = 0; i < attributesCount; i++) {
-			attributes[i] = readAttribute(dis, constantPool);
-		}
 	}
 	
 	public void readMethods() throws IOException {
