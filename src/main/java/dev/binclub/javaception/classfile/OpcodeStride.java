@@ -1,6 +1,5 @@
 package dev.binclub.javaception.classfile;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 public class OpcodeStride {
@@ -31,6 +30,7 @@ public class OpcodeStride {
 		setRange(0xb2, 0xb8, 2);
 		strideAmount[0xb9] = 4;
 		strideAmount[0xba] = 4;
+		strideAmount[0xbb] = 2;
 		strideAmount[0xbc] = 1;
 		strideAmount[0xbd] = 2;
 		setRange(0xc0, 0xc1, 2);
@@ -41,9 +41,10 @@ public class OpcodeStride {
 		initialized = true;
 	}
 
-	public static int getStrideAmount(int opcode, int byteCount, int[] instructions) throws IOException {
+	public static int getStrideAmount(int opcode, int byteCount, int[] instructions) {
 		init();
 		int stride = strideAmount[opcode];
+
 		if (stride != -1) {
 			return stride;
 		}
@@ -59,7 +60,7 @@ public class OpcodeStride {
 		}
 		// tableswitch
 		if (opcode == 0xaa) {
-			int padAmount = byteCount % 4;
+			int padAmount = (byteCount + 1) % 4;
 			if (padAmount != 0) {
 				padAmount = 4 - padAmount;
 			}
@@ -73,7 +74,7 @@ public class OpcodeStride {
 		}
 		// lookupswitch
 		if (opcode == 0xab) {
-			int padAmount = byteCount % 4;
+			int padAmount = (byteCount + 1) % 4;
 			if (padAmount != 0) {
 				padAmount = 4 - padAmount;
 			}
@@ -86,10 +87,10 @@ public class OpcodeStride {
 	}
 
 	public static int getInt(int index, int[] instructions) {
-		int b1 = instructions[index];
-		int b2 = instructions[index + 1];
-		int b3 = instructions[index + 2];
-		int b4 = instructions[index + 3];
+		int b1 = instructions[index + 1];
+		int b2 = instructions[index + 2];
+		int b3 = instructions[index + 3];
+		int b4 = instructions[index + 4];
 		return (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4);
 	}
 

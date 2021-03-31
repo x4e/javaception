@@ -1,12 +1,12 @@
-package dev.binclub.javaception.classfile;
+package dev.binclub.javaception.classfile.constants;
 
 import dev.binclub.javaception.classfile.attributes.BootstrapMethodsAttribute.BootstrapMethod;
 
-public class InvokeDynamicInfo {
-	int bootstrapMethodAttrIndex;
-	int nameAndTypeIndex;
-
-	public InvokeDynamicInfo(int bootstrapMethodAttrIndex, int nameAndTypeIndex) {
+public class DynamicInfo {
+	public final int bootstrapMethodAttrIndex, nameAndTypeIndex;
+	public NameAndTypeInfo nameAndTypeInfo;
+	
+	public DynamicInfo(int bootstrapMethodAttrIndex, int nameAndTypeIndex) {
 		this.bootstrapMethodAttrIndex = bootstrapMethodAttrIndex;
 		this.nameAndTypeIndex = nameAndTypeIndex;
 	}
@@ -16,7 +16,7 @@ public class InvokeDynamicInfo {
 		return bootstrapMethods[bootstrapMethodAttrIndex];
 	}
 
-	public NameAndTypeInfo getMethodNameAndTypeInfo(Object[] constantPool) {
-		return (NameAndTypeInfo) constantPool[nameAndTypeIndex - 1];
+	public NameAndTypeInfo getFieldNameAndTypeInfo(Object[] constantPool) {
+		return nameAndTypeInfo;
 	}
 }

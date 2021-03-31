@@ -10,9 +10,9 @@ public class LocalVariableTableAttribute extends AttributeInfo {
 	int localVariableTableLength;
 	LocalVariableTable[] localVariableTable;
 
-	public LocalVariableTableAttribute(int attributeNameIndex, int attributeLength, DataInputStream dis)
+	public LocalVariableTableAttribute(int attributeLength, DataInputStream dis)
 			throws IOException {
-		super(attributeNameIndex, attributeLength);
+		super("LocalVariableTable", attributeLength);
 		localVariableTableLength = dis.readUnsignedShort();
 		if (localVariableTableLength != 0) {
 			localVariableTable = new LocalVariableTable[localVariableTableLength];

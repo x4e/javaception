@@ -1,17 +1,18 @@
-package dev.binclub.javaception.classfile;
+package dev.binclub.javaception.classfile.constants;
 
 public class MethodHandleInfo {
 
-	HandleTypes type;
-	int referenceIndex;
+	public final HandleTypes type;
+	public final int referenceIndex;
+	public RefInfo refInfo;
 
 	public MethodHandleInfo(int referenceKind, int referenceIndex) {
 		type = HandleTypes.values()[referenceKind - 1];
 		this.referenceIndex = referenceIndex;
 	}
 
-	public RefInfo getReferenceInfo(Object[] cp) {
-		return (RefInfo) cp[referenceIndex - 1];
+	public RefInfo getReferenceInfo() {
+		return refInfo;
 	}
 
 	public static enum HandleTypes {

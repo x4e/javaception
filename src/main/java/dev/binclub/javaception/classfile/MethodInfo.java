@@ -5,7 +5,7 @@ import java.util.List;
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 
 public class MethodInfo {
-	int access;
+	public int access;
 	int nameIndex;
 	int descriptorIndex;
 	List<AttributeInfo> attributes;

@@ -1,15 +1,16 @@
 package dev.binclub.javaception.classfile;
 
 public abstract class AttributeInfo {
-	public int attributeNameIndex, attributeLength;
+	public int attributeLength;
+	String name;
 
-	public AttributeInfo(int attributeNameIndex, int attributeLength) {
-		this.attributeNameIndex = attributeNameIndex;
+	public AttributeInfo(String name, int attributeLength) {
+		this.name = name;
 		this.attributeLength = attributeLength;
 	}
 
-	public String getAttributeName(Object[] cp) {
-		return (String) cp[attributeNameIndex - 1];
+	public String getAttributeName() {
+		return name;
 	}
 
 }

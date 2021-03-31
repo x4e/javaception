@@ -1,36 +1,29 @@
 package dev.binclub.javaception.classfile;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
+import dev.binclub.javaception.classfile.attributes.BootstrapMethodsAttribute;
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 import dev.binclub.javaception.classfile.attributes.ExceptionsAttribute;
 import dev.binclub.javaception.classfile.attributes.LineNumberTableAttribute;
 import dev.binclub.javaception.classfile.attributes.LocalVariableTableAttribute;
 import dev.binclub.javaception.classfile.attributes.SourceFileAttribute;
 import dev.binclub.javaception.classfile.attributes.StackMapTableAttribute;
+import dev.binclub.javaception.classfile.constants.ClassInfo;
+import dev.binclub.javaception.classfile.constants.DynamicInfo;
+import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
+import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
+import dev.binclub.javaception.classfile.constants.MethodTypeInfo;
+import dev.binclub.javaception.classfile.constants.NameAndTypeInfo;
+import dev.binclub.javaception.classfile.constants.RefInfo;
+import dev.binclub.javaception.classfile.constants.UnresolvedString;
 
 public class ClassFileParser {
-
-	// for testing purposes
-	public static void main(String[] args) throws Throwable {
-		InputStream stream = ClassFileParser.class.getClassLoader()
-				.getResourceAsStream("dev/binclub/javaception/classfile/ClassFileParser.class");
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		int available = 0;
-		while ((available = stream.available()) != 0) {
-			byte[] bytes = new byte[available];
-			stream.read(bytes);
-			bos.write(bytes);
-		}
-		new ClassFileParser(bos.toByteArray());
-
-	}
 
 	// the value of the tag byte acts as the index to get the type
 	public static final ConstantTypes[] types = new ConstantTypes[21];
@@ -46,10 +39,12 @@ public class ClassFileParser {
 	String className;
 	String superClass;
 	DataInputStream dis;
-	Object[] constantPool;
+	// public for testing
+	public Object[] constantPool;
 	ClassInfoCP[] interfaces;
 	FieldInfo[] fields;
-	MethodInfo[] methods;
+	// public for testing
+	public MethodInfo[] methods;
 	AttributeInfo[] attributes;
 
 	public ClassFileParser(byte[] classBytes) throws Throwable {
@@ -77,11 +72,9 @@ public class ClassFileParser {
 		parseConstantPool();
 		access = dis.readUnsignedShort();
 		int classNameIndex = dis.readUnsignedShort();
-		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName(constantPool);
-		System.out.println("ClassName " + className);
+		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName();
 		int superClassNameIndex = dis.readUnsignedShort();
-		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName(constantPool);
-		System.out.println("SuperClass " + superClass);
+		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName();
 		interfacesCount = dis.readUnsignedShort();
 		getInterfaces();
 		fieldsCount = dis.readUnsignedShort();
@@ -89,11 +82,9 @@ public class ClassFileParser {
 		methodsCount = dis.readUnsignedShort();
 		readMethods();
 		attributesCount = dis.readUnsignedShort();
-		if (attributesCount != 0) {
-			attributes = new AttributeInfo[attributesCount];
-			for (int i = 0; i < attributesCount; i++) {
-				attributes[i] = readAttribute(dis, constantPool);
-			}
+		attributes = new AttributeInfo[attributesCount];
+		for (int i = 0; i < attributesCount; i++) {
+			attributes[i] = readAttribute(dis, constantPool);
 		}
 	}
 
@@ -144,17 +135,19 @@ public class ClassFileParser {
 		String name = (String) constantPool[attributeNameIndex - 1];
 		switch (name) {
 		case "Code":
-			return new CodeAttribute(attributeNameIndex, attributeLength, dis, constantPool);
+			return new CodeAttribute(attributeLength, dis, constantPool);
 		case "StackMapTable":
-			return new StackMapTableAttribute(attributeNameIndex, attributeLength, dis);
+			return new StackMapTableAttribute(attributeLength, dis);
 		case "Exceptions":
-			return new ExceptionsAttribute(attributeNameIndex, attributeLength, dis, constantPool);
+			return new ExceptionsAttribute(attributeLength, dis, constantPool);
 		case "LineNumberTable":
-			return new LineNumberTableAttribute(attributeNameIndex, attributeLength, dis);
+			return new LineNumberTableAttribute(attributeLength, dis);
 		case "LocalVariableTable":
-			return new LocalVariableTableAttribute(attributeNameIndex, attributeLength, dis);
+			return new LocalVariableTableAttribute(attributeLength, dis);
 		case "SourceFile":
-			return new SourceFileAttribute(attributeNameIndex, attributeLength, dis);
+			return new SourceFileAttribute(attributeLength, dis);
+		case "BootstrapMethods":
+			return new BootstrapMethodsAttribute(attributeLength, dis, constantPool);
 		default:
 			System.out.println("skipping attrib type " + name);
 			dis.skipBytes(attributeLength);
@@ -238,20 +231,70 @@ public class ClassFileParser {
 				constantPool[i] = new DynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);
 				break;
 			default:
-				System.out.println("Unsupported constant type : " + tag);
-				break;
+				throw new ClassFormatError("Unsupported constant type");
 
 			}
 		}
-		// resolves strings
+		// make sure a string can always be referenced this avoids nullptr references
 		for (int i = 0; i < constantPool.length; i++) {
-			if (constantPool[i] instanceof UnresolvedString) {
-				UnresolvedString us = (UnresolvedString) constantPool[i];
+			Object constant = constantPool[i];
+			if (constant instanceof UnresolvedString) {
+				UnresolvedString us = (UnresolvedString) constant;
 				constantPool[i] = (String) constantPool[us.stringIndex - 1];
 
 			}
 		}
+		// resolves
+		for (int i = 0; i < constantPool.length; i++) {
+			Object constant = constantPool[i];
+			if (constant instanceof ClassInfo) {
+				ClassInfo classInfo = (ClassInfo) constant;
+				classInfo.name = (String) constantPool[classInfo.nameIndex - 1];
+			}
+			if (constant instanceof NameAndTypeInfo) {
+				NameAndTypeInfo nameAndTypeInfo = (NameAndTypeInfo) constant;
+				nameAndTypeInfo.name = (String) constantPool[nameAndTypeInfo.nameIndex - 1];
+				nameAndTypeInfo.description = (String) constantPool[nameAndTypeInfo.descriptorIndex - 1];
+			}
+			if (constant instanceof RefInfo) {
+				RefInfo refInfo = (RefInfo) constant;
+				refInfo.classInfo = (ClassInfo) constantPool[refInfo.classIndex - 1];
+				refInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[refInfo.nameAndTypeIndex - 1];
+			}
+			if (constant instanceof DynamicInfo) {
+				DynamicInfo dynamicInfo = (DynamicInfo) constant;
+				dynamicInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[dynamicInfo.nameAndTypeIndex - 1];
+			}
+			if (constant instanceof InvokeDynamicInfo) {
+				InvokeDynamicInfo invokeDynamicInfo = (InvokeDynamicInfo) constant;
+				invokeDynamicInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[invokeDynamicInfo.nameAndTypeIndex
+						- 1];
+			}
+			if (constant instanceof MethodHandleInfo) {
+				MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constant;
+				methodHandleInfo.refInfo = (RefInfo) constantPool[methodHandleInfo.referenceIndex - 1];
+			}
+			if (constant instanceof MethodTypeInfo) {
+				MethodTypeInfo methodTypeInfo = (MethodTypeInfo) constant;
+				methodTypeInfo.methodDescription = (String) constantPool[methodTypeInfo.descriptorIndex - 1];
+			}
 
+		}
+
+	}
+	//stuff for testing
+	public static int addTest(int a, int b) {
+		return a + b;
+	}
+	
+	public static String appendTest(String text) {
+		return "hello " + text;
+	}
+
+	public Supplier<String> getSupplier(String s) {
+		return () -> {
+			return s;
+		};
 	}
 
 }

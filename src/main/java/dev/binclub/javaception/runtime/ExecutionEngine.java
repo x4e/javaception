@@ -1,24 +1,26 @@
 package dev.binclub.javaception.runtime;
 
-import dev.binclub.javaception.classfile.Klass;
+import java.lang.reflect.Modifier;
+
 import dev.binclub.javaception.classfile.MethodInfo;
-import dev.binclub.javaception.classfile.OpcodeStride;
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
+import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 import dev.binclub.javaception.oop.InstanceOop;
 
 public class ExecutionEngine {
 
-	public static Instruction[] instructionHandlers = new Instruction[256];
+	public static InstructionExecutor[] instructionExecutors = new InstructionExecutor[256];
 
-	// invokes method expecting a return obj
-	public static void invokeMethodObj(InstanceOop instance, MethodInfo method, MethodContext caller, Object... args)
-			throws Throwable {
+	// invokes method expecting a return obj to but put onto the caller stack
+	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) throws Throwable {
 		CodeAttribute code = method.getCodeAttribute();
 		MethodContext methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
 		int index = 0;
 		// reference to self
-		methodContext.store(0, instance);
-		index += 1;
+		if (!Modifier.isStatic(method.access)) {
+			methodContext.store(0, instance);
+			index += 1;
+		}
 		// store args into localvariables
 		for (Object obj : args) {
 			methodContext.store(index, obj);
@@ -28,27 +30,15 @@ public class ExecutionEngine {
 				++index;
 			}
 		}
-		int[] instructions = code.getCode();
-		MutableInt instructionPointer = new MutableInt();
-		for (;;) {
-			int byt = instructions[instructionPointer.value];
-			Instruction instructionHandle = instructionHandlers[byt];
-			if (instructionHandle == null) {
-				throw new Throwable("Unsupported Instruction");
-			}
-			if (instructionHandle.execute(methodContext, instructions, instructionPointer)) {
-				caller.push(methodContext.pop());
-				return;
-			}
-			//perhaps make a cache for this?
-			int stride = OpcodeStride.getStrideAmount(byt, instructionPointer.value, instructions);
-			instructionPointer.value += stride + 1;
-
+		SimpleInstruction instruction = code.getInstructions().get(0);
+		InstructionExecutor executor = instructionExecutors[instruction.getOpcode()];
+		if (executor == null) {
+			throw new RuntimeException("Unsupported instruction " + String.format("0x%2X", instruction.getOpcode()));
 		}
-
-	}
-
-	public static void invokeStaticMethod(Klass klass, MethodInfo method, Object... args) {
+		while ((instruction = executor.execute(methodContext, instruction)) != null) {
+			executor = instructionExecutors[instruction.getOpcode()];
+		}
+		return methodContext.pop();
 
 	}
 }

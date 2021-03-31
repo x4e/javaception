@@ -1,7 +1,7 @@
-package dev.binclub.javaception.classfile;
+package dev.binclub.javaception.classfile.constants;
 
 public class UnresolvedString {
-	int stringIndex;
+	public int stringIndex;
 
 	public UnresolvedString(int stringIndex) {
 		this.stringIndex = stringIndex;
