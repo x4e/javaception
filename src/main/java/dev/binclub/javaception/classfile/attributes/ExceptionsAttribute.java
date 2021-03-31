@@ -1,19 +1,19 @@
 package dev.binclub.javaception.classfile.attributes;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-
 import dev.binclub.javaception.classfile.AttributeInfo;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
 
 public class ExceptionsAttribute extends AttributeInfo {
-
+	
 	int numberOfExceptions;
 	ClassInfo[] exceptionIndexTable;
-
+	
 	public ExceptionsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
-			throws IOException {
+		throws IOException {
 		super("Exceptions", attributeLength);
 		numberOfExceptions = dis.readUnsignedShort();
 		if (numberOfExceptions != 0) {
@@ -23,7 +23,7 @@ public class ExceptionsAttribute extends AttributeInfo {
 				exceptionIndexTable[i] = (ClassInfo) constantPool[index - 1];
 			}
 		}
-
+		
 	}
-
+	
 }

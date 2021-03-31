@@ -5,7 +5,7 @@ public class ExceptionData {
 	int endPc;
 	int handlerPc;
 	int catchType;
-
+	
 	public ExceptionData(int startPc, int endPc, int handlerPc, int catchType) {
 		super();
 		this.startPc = startPc;
@@ -13,5 +13,5 @@ public class ExceptionData {
 		this.handlerPc = handlerPc;
 		this.catchType = catchType;
 	}
-
+	
 }

@@ -13,13 +13,22 @@ public class ArrayType extends ClassType {
 		this.inner = inner;
 	}
 	
+	private static String toDescriptor(int dimensions, Type inner) {
+		StringBuilder sb = new StringBuilder(dimensions + 5);
+		for (int i = 0; i < dimensions; i++) {
+			sb.append('[');
+		}
+		sb.append(inner.toString());
+		return sb.toString();
+	}
+	
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ArrayType arrayType = (ArrayType) o;
 		return dimensions == arrayType.dimensions &&
-		inner.equals(arrayType.inner);
+			inner.equals(arrayType.inner);
 	}
 	
 	@Override
@@ -30,14 +39,5 @@ public class ArrayType extends ClassType {
 	@Override
 	public String toString() {
 		return name;
-	}
-	
-	private static String toDescriptor(int dimensions, Type inner) {
-		StringBuilder sb = new StringBuilder(dimensions + 5);
-		for (int i = 0; i < dimensions; i++) {
-			sb.append('[');
-		}
-		sb.append(inner.toString());
-		return sb.toString();
 	}
 }

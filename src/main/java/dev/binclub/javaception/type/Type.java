@@ -13,6 +13,7 @@ public abstract class Type {
 	/**
 	 * Parse a field descriptor according to JVMS 4.3.2.
 	 * This does not support parameters or void.
+	 *
 	 * @param descriptor a field descriptor
 	 * @return the singular type represented by the descriptor
 	 * @throws IllegalArgumentException if the descriptor is invalid
@@ -24,12 +25,13 @@ public abstract class Type {
 			
 			if (
 				out == PrimitiveType.VOID
-				||
-				(out instanceof ArrayType && ((ArrayType)out).inner == PrimitiveType.VOID)
+					||
+					(out instanceof ArrayType && ((ArrayType) out).inner == PrimitiveType.VOID)
 			) throw new IllegalArgumentException("Field descriptors may not use Void");
 			
 			return out;
-		} catch (RuntimeException ex) {
+		}
+		catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
 				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
 			}
@@ -39,6 +41,7 @@ public abstract class Type {
 	
 	/**
 	 * Parses the arguments of a method descriptor.
+	 *
 	 * @param descriptor method descriptor
 	 * @return array of arguments
 	 * @throws IllegalArgumentException if the descriptor is invalid
@@ -55,7 +58,8 @@ public abstract class Type {
 				offset = offsetOut[0];
 			}
 			return out.toArray(new Type[0]);
-		} catch (RuntimeException ex) {
+		}
+		catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
 				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
 			}
@@ -68,7 +72,8 @@ public abstract class Type {
 			char[] chars = descriptor.toCharArray();
 			int offset = descriptor.lastIndexOf(')') + 1;
 			return parseSingleType(chars, offset, new int[1]);
-		} catch (RuntimeException ex) {
+		}
+		catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
 				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
 			}
@@ -119,7 +124,8 @@ public abstract class Type {
 				return PrimitiveType.DOUBLE;
 			}
 			throw new IllegalArgumentException("Unknown descriptor identifier: " + first);
-		} finally {
+		}
+		finally {
 			offsetOut[0] = offset;
 		}
 	}

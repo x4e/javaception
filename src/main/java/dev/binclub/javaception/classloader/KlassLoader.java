@@ -26,9 +26,10 @@ public class KlassLoader {
 	
 	/**
 	 * Create the array class denoted by arrayType
+	 *
 	 * @param referencedBy The class that referenced this arrayType, may be null
-	 * @param classLoader The classloader of referencedBy
-	 * @param arrayType The type of the array to create
+	 * @param classLoader  The classloader of referencedBy
+	 * @param arrayType    The type of the array to create
 	 * @return A class representing this arrayType
 	 * @throws ClassNotFoundException The array could not be created because the inner class was not found
 	 */
@@ -45,7 +46,8 @@ public class KlassLoader {
 		if (arrayType.inner instanceof ClassType) {
 			Klass inner = SystemDictionary.findReferencedClass(referencedBy, (ClassType) arrayType.inner);
 			out = new ArrayKlass(classLoader, null, name, arrayType.dimensions, inner);
-		} else {
+		}
+		else {
 			// TODO: primitive array support
 			throw new UnsupportedOperationException();
 		}
@@ -64,7 +66,8 @@ public class KlassLoader {
 				return out;
 			}
 			throw new ClassNotFoundException();
-		} else {
+		}
+		else {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (classLoader) {
 				// If referencedBy was defined by a user-defined class loader, then that same user-defined class loader

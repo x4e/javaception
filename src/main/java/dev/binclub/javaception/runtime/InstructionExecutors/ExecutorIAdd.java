@@ -5,7 +5,7 @@ import dev.binclub.javaception.runtime.InstructionExecutor;
 import dev.binclub.javaception.runtime.MethodContext;
 
 public class ExecutorIAdd implements InstructionExecutor {
-
+	
 	@Override
 	public SimpleInstruction execute(MethodContext methodContext, SimpleInstruction instruction) {
 		int a = (int) methodContext.pop();
@@ -13,5 +13,5 @@ public class ExecutorIAdd implements InstructionExecutor {
 		methodContext.push(a + b);
 		return instruction.getNextInstruction();
 	}
-
+	
 }

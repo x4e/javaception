@@ -1,17 +1,17 @@
 package dev.binclub.javaception.classfile.attributes;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.List;
-
 import dev.binclub.javaception.classfile.AttributeInfo;
 import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.classfile.ExceptionData;
 import dev.binclub.javaception.classfile.InstructionParser;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 
-public class CodeAttribute extends AttributeInfo {
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.List;
 
+public class CodeAttribute extends AttributeInfo {
+	
 	int maxStack;
 	int maxLocals;
 	int codeLength;
@@ -20,9 +20,9 @@ public class CodeAttribute extends AttributeInfo {
 	ExceptionData[] exceptions;
 	int attributesCount;
 	AttributeInfo[] attributes;
-
-	public CodeAttribute( int attributeLength, DataInputStream dis, Object[] constantPool)
-			throws IOException {
+	
+	public CodeAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
+		throws IOException {
 		super("Code", attributeLength);
 		maxStack = dis.readUnsignedShort();
 		maxLocals = dis.readUnsignedShort();
@@ -47,17 +47,17 @@ public class CodeAttribute extends AttributeInfo {
 		}
 		instructions = InstructionParser.parseCode(code, constantPool);
 	}
-
+	
 	public int getMaxStack() {
 		return maxStack;
 	}
-
+	
 	public int getMaxLocals() {
 		return maxLocals;
 	}
-
+	
 	public List<SimpleInstruction> getInstructions() {
 		return instructions;
 	}
-
+	
 }

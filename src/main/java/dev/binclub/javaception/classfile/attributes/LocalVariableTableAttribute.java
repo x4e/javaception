@@ -1,17 +1,17 @@
 package dev.binclub.javaception.classfile.attributes;
 
+import dev.binclub.javaception.classfile.AttributeInfo;
+
 import java.io.DataInputStream;
 import java.io.IOException;
-
-import dev.binclub.javaception.classfile.AttributeInfo;
 
 
 public class LocalVariableTableAttribute extends AttributeInfo {
 	int localVariableTableLength;
 	LocalVariableTable[] localVariableTable;
-
+	
 	public LocalVariableTableAttribute(int attributeLength, DataInputStream dis)
-			throws IOException {
+		throws IOException {
 		super("LocalVariableTable", attributeLength);
 		localVariableTableLength = dis.readUnsignedShort();
 		if (localVariableTableLength != 0) {
@@ -26,10 +26,10 @@ public class LocalVariableTableAttribute extends AttributeInfo {
 			}
 		}
 	}
-
+	
 	public static class LocalVariableTable {
 		int startPc, length, nameIndex, descriptorIndex, index;
-
+		
 		public LocalVariableTable(int startPc, int length, int nameIndex, int descriptorIndex, int index) {
 			this.startPc = startPc;
 			this.length = length;
@@ -37,6 +37,6 @@ public class LocalVariableTableAttribute extends AttributeInfo {
 			this.descriptorIndex = descriptorIndex;
 			this.index = index;
 		}
-
+		
 	}
 }

@@ -3,12 +3,12 @@ package dev.binclub.javaception.classfile.attributes;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 
 public class LookupSwitchInstruction extends SimpleInstruction {
-
+	
+	public final int defalt, npairs;
 	int[] keys;
 	SimpleInstruction[] branches;
-	public final int defalt, npairs;
 	SimpleInstruction defaultInstruction;
-
+	
 	public LookupSwitchInstruction(int defalt, int npairs) {
 		super(0xab);
 		this.defalt = defalt;
@@ -19,8 +19,18 @@ public class LookupSwitchInstruction extends SimpleInstruction {
 		return branches;
 	}
 	
+	//to be used by the instruction parser
+	public void setJumpOffsets(SimpleInstruction[] jumpOffsets) {
+		this.branches = jumpOffsets;
+	}
+	
 	public int[] getKeys() {
 		return keys;
+	}
+	
+	//to be used by the instruction parser
+	public void setKeys(int[] keys) {
+		this.keys = keys;
 	}
 	
 	public SimpleInstruction getDefaultInstruction() {
@@ -28,16 +38,8 @@ public class LookupSwitchInstruction extends SimpleInstruction {
 	}
 	
 	//to be used by the instruction parser
-	public void setJumpOffsets(SimpleInstruction[] jumpOffsets) {
-		this.branches = jumpOffsets;
-	}
-	//to be used by the instruction parser
 	public void setDefaultInstruction(SimpleInstruction defaultInstruction) {
 		this.defaultInstruction = defaultInstruction;
 	}
-	//to be used by the instruction parser
-	public void setKeys(int[] keys) {
-		this.keys = keys;
-	}
-
+	
 }

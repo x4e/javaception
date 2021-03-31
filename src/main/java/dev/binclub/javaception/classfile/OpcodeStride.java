@@ -3,12 +3,12 @@ package dev.binclub.javaception.classfile;
 import java.util.Arrays;
 
 public class OpcodeStride {
-
+	
 	static boolean initialized = false;
 	// number of bytes this opcode takes e.g bipush 1byte
 	// index correlates to bytecode
 	static int[] strideAmount = new int[256];
-
+	
 	static void init() {
 		// this method only needs to be ran once
 		if (initialized) {
@@ -40,11 +40,11 @@ public class OpcodeStride {
 		setRange(0xc8, 0xc9, 4);
 		initialized = true;
 	}
-
+	
 	public static int getStrideAmount(int opcode, int byteCount, int[] instructions) {
 		init();
 		int stride = strideAmount[opcode];
-
+		
 		if (stride != -1) {
 			return stride;
 		}
@@ -54,7 +54,8 @@ public class OpcodeStride {
 			// inc
 			if (opcodeW == 0x84) {
 				return 4;
-			} else {
+			}
+			else {
 				return 2;
 			}
 		}
@@ -85,7 +86,7 @@ public class OpcodeStride {
 		}
 		return stride;
 	}
-
+	
 	public static int getInt(int index, int[] instructions) {
 		int b1 = instructions[index + 1];
 		int b2 = instructions[index + 2];
@@ -93,7 +94,7 @@ public class OpcodeStride {
 		int b4 = instructions[index + 4];
 		return (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4);
 	}
-
+	
 	static void setRange(int lowerBound, int upperBound, int count) {
 		for (int i = lowerBound; i <= upperBound; i++) {
 			strideAmount[i] = count;

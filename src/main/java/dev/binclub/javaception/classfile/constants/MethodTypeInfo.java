@@ -7,9 +7,9 @@ public class MethodTypeInfo {
 	public MethodTypeInfo(int descriptorIndex) {
 		this.descriptorIndex = descriptorIndex;
 	}
-
+	
 	public String getMethodDescription() {
 		return methodDescription;
 	}
-
+	
 }

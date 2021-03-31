@@ -1,7 +1,7 @@
 package dev.binclub.javaception.classfile.instructions;
 
-public class BranchInstruction extends SimpleInstruction{
-
+public class BranchInstruction extends SimpleInstruction {
+	
 	SimpleInstruction branchInstruction;
 	int branchPosition;
 	
@@ -13,6 +13,7 @@ public class BranchInstruction extends SimpleInstruction{
 	public SimpleInstruction getBranchInstruction() {
 		return branchInstruction;
 	}
+	
 	//branchOffset
 	public void setBranchInstruction(SimpleInstruction branchInstruction) {
 		this.branchInstruction = branchInstruction;

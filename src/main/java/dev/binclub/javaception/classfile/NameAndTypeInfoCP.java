@@ -1,7 +1,7 @@
 package dev.binclub.javaception.classfile;
 
-public class NameAndTypeInfoCP extends CpInitializable<Void>{
-
+public class NameAndTypeInfoCP extends CpInitializable<Void> {
+	
 	int nameIndex;
 	int descriptorIndex;
 	
@@ -9,7 +9,7 @@ public class NameAndTypeInfoCP extends CpInitializable<Void>{
 	public void initialize() {
 		
 	}
-
+	
 	@Override
 	public Void resolve() {
 		return null;

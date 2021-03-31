@@ -20,14 +20,16 @@ public class SystemDictionary {
 	/**
 	 * Attempts to find the class with the given name.
 	 * If it is not found then it will be loaded/created.
+	 *
 	 * @param referencedBy The class that referenced this class through it's runtime constant pool
-	 * @param className The name of the referenced class
+	 * @param className    The name of the referenced class
 	 * @return The referenced class
 	 */
 	public static Klass findReferencedClass(Klass referencedBy, ClassType className) throws ClassNotFoundException {
 		if (className instanceof ArrayType) {
 			return KlassLoader.createArrayClass(referencedBy, referencedBy.classLoader, (ArrayType) className);
-		} else {
+		}
+		else {
 			InstanceOop cl = null;
 			if (referencedBy != null) {
 				cl = referencedBy.classLoader;
@@ -50,7 +52,8 @@ public class SystemDictionary {
 		static {
 			try {
 				java_lang_Object = findReferencedClass(null, Type.classType("java/lang/Object"));
-			} catch (ClassNotFoundException ex) {
+			}
+			catch (ClassNotFoundException ex) {
 				throw new Error(ex);
 			}
 		}

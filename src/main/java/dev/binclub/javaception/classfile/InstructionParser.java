@@ -1,27 +1,18 @@
 package dev.binclub.javaception.classfile;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import dev.binclub.javaception.classfile.attributes.LookupSwitchInstruction;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
-import dev.binclub.javaception.classfile.instructions.BranchInstruction;
-import dev.binclub.javaception.classfile.instructions.ClassRefInstruction;
-import dev.binclub.javaception.classfile.instructions.IincInstruction;
-import dev.binclub.javaception.classfile.instructions.InvokeDynamicInstruction;
-import dev.binclub.javaception.classfile.instructions.LoadConstantInstruction;
-import dev.binclub.javaception.classfile.instructions.MultiANewArray;
-import dev.binclub.javaception.classfile.instructions.RefInstruction;
-import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
-import dev.binclub.javaception.classfile.instructions.TableSwitchInstruction;
-import dev.binclub.javaception.classfile.instructions.VarInstruction;
+import dev.binclub.javaception.classfile.instructions.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InstructionParser {
-
+	
 	public static List<SimpleInstruction> parseCode(int[] code, Object[] constantPool) {
-
+		
 		SimpleInstruction[] insts = new SimpleInstruction[code.length];
 		int instructionPointer = 0;
 		for (int i = 0; i < code.length; i++) {
@@ -88,7 +79,7 @@ public class InstructionParser {
 				}
 				instruct.setJumpOffsets(jumps);
 				instruct.setKeys(keys);
-
+				
 			}
 			// insts is gapped
 			if (inst != null) {
@@ -106,7 +97,7 @@ public class InstructionParser {
 		}
 		return instructions;
 	}
-
+	
 	public static SimpleInstruction parseInstruction(int[] instructions, int index, Object[] constantPool) {
 		int opcode = instructions[index];
 		int stride = OpcodeStride.getStrideAmount(opcode, index, instructions);
@@ -115,7 +106,7 @@ public class InstructionParser {
 		}
 		// bipush / ldc // xload // xstore // ret // atype
 		if (opcode == 0x10 || opcode == 0x12 || (opcode > 0x14 && opcode < 0x1a) || (opcode > 0x35 && opcode < 0x3b)
-				|| opcode == 0xa8 || opcode == 0xbc) {
+			|| opcode == 0xa8 || opcode == 0xbc) {
 			int value = instructions[index + 1];
 			return new VarInstruction(opcode, value);
 		}
@@ -136,7 +127,7 @@ public class InstructionParser {
 		// goto_w // jsr_W
 		if (opcode == 0xc8 || opcode == 0xc9) {
 			int branchOffset = ((instructions[index + 1] << 24) + (instructions[index + 2] << 16)
-					+ (instructions[index + 3] << 8) + instructions[index + 4]);
+				+ (instructions[index + 3] << 8) + instructions[index + 4]);
 			int pos = index + branchOffset;
 			if (pos < 0 || pos > instructions.length) {
 				throw new VerifyError();
@@ -158,7 +149,7 @@ public class InstructionParser {
 			int value = ((instructions[index + 1] << 8) + instructions[index + 2]);
 			return new RefInstruction(opcode, (RefInfo) constantPool[value - 1]);
 		}
-		if(opcode == 0xba) {
+		if (opcode == 0xba) {
 			int value = ((instructions[index + 1] << 8) + instructions[index + 2]);
 			return new InvokeDynamicInstruction((InvokeDynamicInfo) constantPool[value - 1]);
 		}
@@ -186,14 +177,15 @@ public class InstructionParser {
 				int value = ((instructions[index + 1] << 8) + instructions[index + 2]);
 				int increment = (short) ((instructions[index + 3] << 8) + instructions[index + 4]);
 				return new IincInstruction(value, increment);
-			} else {
+			}
+			else {
 				int value = ((instructions[index + 1] << 8) + instructions[index + 2]);
 				return new VarInstruction(op, value);
 			}
 		}
 		// table switch
 		if (opcode == 0xaa) {
-
+			
 			int padAmount = (index + 1) % 4;
 			if (padAmount != 0) {
 				padAmount = 4 - padAmount;
@@ -215,8 +207,8 @@ public class InstructionParser {
 			int npairs = OpcodeStride.getInt(index + padAmount + 4, instructions);
 			return new LookupSwitchInstruction(defalt, npairs);
 		}
-
+		
 		throw new VerifyError("could not parse " + String.format("0x%2X", opcode));
 	}
-
+	
 }

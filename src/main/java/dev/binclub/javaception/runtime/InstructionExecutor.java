@@ -6,5 +6,5 @@ public interface InstructionExecutor {
 	/*
 	 * @return return null or next instruction
 	 */
-	public SimpleInstruction execute(MethodContext methodContext, SimpleInstruction instruction);
+	SimpleInstruction execute(MethodContext methodContext, SimpleInstruction instruction);
 }

@@ -5,7 +5,7 @@ import dev.binclub.javaception.runtime.InstructionExecutor;
 
 public class InstructionRegistry {
 	static boolean initialized = false;
-
+	
 	public static void init() {
 		if (initialized) {
 			return;
@@ -15,7 +15,7 @@ public class InstructionRegistry {
 		setRange(0xac, 0xb0, new ExecutorXReturn());
 		initialized = true;
 	}
-
+	
 	public static void setRange(int lowerBound, int upperBound, InstructionExecutor executor) {
 		for (int i = lowerBound; i <= upperBound; i++) {
 			ExecutionEngine.instructionExecutors[i] = executor;

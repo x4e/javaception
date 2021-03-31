@@ -11,12 +11,12 @@ public class InvokeDynamicInfo {
 		this.bootstrapMethodAttrIndex = bootstrapMethodAttrIndex;
 		this.nameAndTypeIndex = nameAndTypeIndex;
 	}
-
+	
 	public BootstrapMethod getBootstrapMethod(BootstrapMethod[] bootstrapMethods) {
 		// potentially need to sub one from attrIndex?
 		return bootstrapMethods[bootstrapMethodAttrIndex];
 	}
-
+	
 	public NameAndTypeInfo getMethodNameAndTypeInfo() {
 		return nameAndTypeInfo;
 	}

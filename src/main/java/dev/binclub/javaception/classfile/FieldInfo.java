@@ -7,7 +7,7 @@ public class FieldInfo {
 	int nameIndex;
 	int descriptorIndex;
 	List<AttributeInfo> attributes;
-
+	
 	public FieldInfo(int access, int nameIndex, int descriptorIndex, List<AttributeInfo> attributes) {
 		this.access = access;
 		this.nameIndex = nameIndex;

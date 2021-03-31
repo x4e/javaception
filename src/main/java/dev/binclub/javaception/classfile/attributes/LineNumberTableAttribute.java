@@ -1,16 +1,16 @@
 package dev.binclub.javaception.classfile.attributes;
 
+import dev.binclub.javaception.classfile.AttributeInfo;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import dev.binclub.javaception.classfile.AttributeInfo;
-
 
 public class LineNumberTableAttribute extends AttributeInfo {
-
+	
 	int lineNumberTableLength;
 	LineInfo[] lineNumberTable;
-
+	
 	public LineNumberTableAttribute(int attributeLength, DataInputStream dis) throws IOException {
 		super("LineNumberTable", attributeLength);
 		lineNumberTableLength = dis.readUnsignedShort();
@@ -22,17 +22,17 @@ public class LineNumberTableAttribute extends AttributeInfo {
 				lineNumberTable[i] = new LineInfo(startPc, lineNumber);
 			}
 		}
-
+		
 	}
-
+	
 	public static class LineInfo {
 		int startPc, lineNumber;
-
+		
 		public LineInfo(int startPc, int lineNumber) {
 			super();
 			this.startPc = startPc;
 			this.lineNumber = lineNumber;
 		}
 	}
-
+	
 }

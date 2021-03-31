@@ -1,7 +1,7 @@
 package dev.binclub.javaception.classfile.instructions;
 
-public class IincInstruction extends SimpleInstruction{
-
+public class IincInstruction extends SimpleInstruction {
+	
 	int index;
 	int increment;
 	

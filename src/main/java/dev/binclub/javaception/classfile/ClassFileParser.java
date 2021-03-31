@@ -1,19 +1,6 @@
 package dev.binclub.javaception.classfile;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
-import dev.binclub.javaception.classfile.attributes.BootstrapMethodsAttribute;
-import dev.binclub.javaception.classfile.attributes.CodeAttribute;
-import dev.binclub.javaception.classfile.attributes.ExceptionsAttribute;
-import dev.binclub.javaception.classfile.attributes.LineNumberTableAttribute;
-import dev.binclub.javaception.classfile.attributes.LocalVariableTableAttribute;
-import dev.binclub.javaception.classfile.attributes.SourceFileAttribute;
-import dev.binclub.javaception.classfile.attributes.StackMapTableAttribute;
+import dev.binclub.javaception.classfile.attributes.*;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.DynamicInfo;
 import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
@@ -23,11 +10,21 @@ import dev.binclub.javaception.classfile.constants.NameAndTypeInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
 import dev.binclub.javaception.classfile.constants.UnresolvedString;
 
-public class ClassFileParser {
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
+public class ClassFileParser {
+	
 	// the value of the tag byte acts as the index to get the type
 	public static final ConstantTypes[] types = ConstantTypes.values();
-
+	// public for testing
+	public Object[] constantPool;
+	// public for testing
+	public MethodInfo[] methods;
 	int constantPoolCount;
 	int majorVersion;
 	int minorVersion;
@@ -39,24 +36,56 @@ public class ClassFileParser {
 	String className;
 	String superClass;
 	DataInputStream dis;
-	// public for testing
-	public Object[] constantPool;
 	ClassInfoCP[] interfaces;
 	FieldInfo[] fields;
-	// public for testing
-	public MethodInfo[] methods;
 	AttributeInfo[] attributes;
-
+	
 	public ClassFileParser(byte[] classBytes) throws Throwable {
 		if (classBytes.length < 4) {
 			// need atleast 4 bytes get magic number
 			throw new ClassFormatError();
 		}
-
+		
 		parseClass(classBytes);
-
+		
 	}
-
+	
+	public static AttributeInfo readAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+		int attributeNameIndex = dis.readUnsignedShort();
+		int attributeLength = dis.readInt();
+		String name = (String) constantPool[attributeNameIndex - 1];
+		switch (name) {
+		case "Code":
+			return new CodeAttribute(attributeLength, dis, constantPool);
+		case "StackMapTable":
+			return new StackMapTableAttribute(attributeLength, dis);
+		case "Exceptions":
+			return new ExceptionsAttribute(attributeLength, dis, constantPool);
+		case "LineNumberTable":
+			return new LineNumberTableAttribute(attributeLength, dis);
+		case "LocalVariableTable":
+			return new LocalVariableTableAttribute(attributeLength, dis);
+		case "SourceFile":
+			return new SourceFileAttribute(attributeLength, dis);
+		case "BootstrapMethods":
+			return new BootstrapMethodsAttribute(attributeLength, dis, constantPool);
+		default:
+			System.out.println("skipping attrib type " + name);
+			dis.skipBytes(attributeLength);
+			break;
+		}
+		return null;
+	}
+	
+	//stuff for testing
+	public static int addTest(int a, int b) {
+		return a + b;
+	}
+	
+	public static String appendTest(String text) {
+		return "hello " + text;
+	}
+	
 	public void parseClass(byte[] classBytes) throws Throwable {
 		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
 		int magic = dis.readInt();
@@ -87,7 +116,7 @@ public class ClassFileParser {
 			attributes[i] = readAttribute(dis, constantPool);
 		}
 	}
-
+	
 	public void readMethods() throws IOException {
 		methods = new MethodInfo[methodsCount];
 		for (int i = 0; i < methodsCount; i++) {
@@ -105,10 +134,10 @@ public class ClassFileParser {
 				}
 			}
 			methods[i] = new MethodInfo(access, nameIndex, descriptorIndex, attributes);
-
+			
 		}
 	}
-
+	
 	public void readFields() throws Throwable {
 		fields = new FieldInfo[fieldsCount];
 		for (int i = 0; i < fieldsCount; i++) {
@@ -128,43 +157,16 @@ public class ClassFileParser {
 			fields[i] = new FieldInfo(access, nameIndex, descriptorIndex, attributes);
 		}
 	}
-
-	public static AttributeInfo readAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
-		int attributeNameIndex = dis.readUnsignedShort();
-		int attributeLength = dis.readInt();
-		String name = (String) constantPool[attributeNameIndex - 1];
-		switch (name) {
-		case "Code":
-			return new CodeAttribute(attributeLength, dis, constantPool);
-		case "StackMapTable":
-			return new StackMapTableAttribute(attributeLength, dis);
-		case "Exceptions":
-			return new ExceptionsAttribute(attributeLength, dis, constantPool);
-		case "LineNumberTable":
-			return new LineNumberTableAttribute(attributeLength, dis);
-		case "LocalVariableTable":
-			return new LocalVariableTableAttribute(attributeLength, dis);
-		case "SourceFile":
-			return new SourceFileAttribute(attributeLength, dis);
-		case "BootstrapMethods":
-			return new BootstrapMethodsAttribute(attributeLength, dis, constantPool);
-		default:
-			System.out.println("skipping attrib type " + name);
-			dis.skipBytes(attributeLength);
-			break;
-		}
-		return null;
-	}
-
+	
 	public void getInterfaces() throws Throwable {
 		interfaces = new ClassInfoCP[interfacesCount];
 		for (int i = 0; i < interfacesCount; i++) {
 			interfaces[i] = (ClassInfoCP) constantPool[dis.readUnsignedShort() - 1];
 		}
 	}
-
+	
 	public void parseConstantPool() throws Throwable {
-
+		
 		for (int i = 0; i < constantPoolCount - 1; i++) {
 			int tag = dis.readUnsignedByte();
 			ConstantTypes type = types[tag];
@@ -232,7 +234,7 @@ public class ClassFileParser {
 				break;
 			default:
 				throw new ClassFormatError("Unsupported constant type");
-
+				
 			}
 		}
 		// make sure a string can always be referenced this avoids nullptr references
@@ -240,8 +242,8 @@ public class ClassFileParser {
 			Object constant = constantPool[i];
 			if (constant instanceof UnresolvedString) {
 				UnresolvedString us = (UnresolvedString) constant;
-				constantPool[i] = (String) constantPool[us.stringIndex - 1];
-
+				constantPool[i] = constantPool[us.stringIndex - 1];
+				
 			}
 		}
 		// resolves
@@ -268,7 +270,7 @@ public class ClassFileParser {
 			if (constant instanceof InvokeDynamicInfo) {
 				InvokeDynamicInfo invokeDynamicInfo = (InvokeDynamicInfo) constant;
 				invokeDynamicInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[invokeDynamicInfo.nameAndTypeIndex
-						- 1];
+					- 1];
 			}
 			if (constant instanceof MethodHandleInfo) {
 				MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constant;
@@ -278,23 +280,15 @@ public class ClassFileParser {
 				MethodTypeInfo methodTypeInfo = (MethodTypeInfo) constant;
 				methodTypeInfo.methodDescription = (String) constantPool[methodTypeInfo.descriptorIndex - 1];
 			}
-
+			
 		}
-
-	}
-	//stuff for testing
-	public static int addTest(int a, int b) {
-		return a + b;
+		
 	}
 	
-	public static String appendTest(String text) {
-		return "hello " + text;
-	}
-
 	public Supplier<String> getSupplier(String s) {
 		return () -> {
 			return s;
 		};
 	}
-
+	
 }

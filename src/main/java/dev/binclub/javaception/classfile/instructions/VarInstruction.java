@@ -1,7 +1,7 @@
 package dev.binclub.javaception.classfile.instructions;
 
-public class VarInstruction extends SimpleInstruction{
-
+public class VarInstruction extends SimpleInstruction {
+	
 	int value;
 	
 	public VarInstruction(int opcode, int value) {

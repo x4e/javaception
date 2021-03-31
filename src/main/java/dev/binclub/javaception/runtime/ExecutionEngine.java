@@ -1,16 +1,16 @@
 package dev.binclub.javaception.runtime;
 
-import java.lang.reflect.Modifier;
-
 import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 import dev.binclub.javaception.oop.InstanceOop;
 
+import java.lang.reflect.Modifier;
+
 public class ExecutionEngine {
-
+	
 	public static InstructionExecutor[] instructionExecutors = new InstructionExecutor[256];
-
+	
 	// invokes method expecting a return obj to but put onto the caller stack
 	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) throws Throwable {
 		CodeAttribute code = method.getCodeAttribute();
@@ -26,7 +26,8 @@ public class ExecutionEngine {
 			methodContext.store(index, obj);
 			if (obj instanceof Long || obj instanceof Double) {
 				index += 2;
-			} else {
+			}
+			else {
 				++index;
 			}
 		}
@@ -39,6 +40,6 @@ public class ExecutionEngine {
 			executor = instructionExecutors[instruction.getOpcode()];
 		}
 		return methodContext.pop();
-
+		
 	}
 }

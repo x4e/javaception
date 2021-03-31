@@ -1,18 +1,18 @@
 package dev.binclub.javaception.classfile.attributes;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-
 import dev.binclub.javaception.classfile.AttributeInfo;
 import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
 
-public class BootstrapMethodsAttribute extends AttributeInfo {
+import java.io.DataInputStream;
+import java.io.IOException;
 
+public class BootstrapMethodsAttribute extends AttributeInfo {
+	
 	int numBootstrapMethods;
 	BootstrapMethod[] bootstrapMethods;
-
+	
 	public BootstrapMethodsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
-			throws IOException {
+		throws IOException {
 		super("BootstrapMethods", attributeLength);
 		numBootstrapMethods = dis.readUnsignedShort();
 		bootstrapMethods = new BootstrapMethod[numBootstrapMethods];
@@ -28,16 +28,16 @@ public class BootstrapMethodsAttribute extends AttributeInfo {
 			bootstrapMethods[i] = new BootstrapMethod(methodHandleInfo, bootstrapArguments);
 		}
 	}
-
+	
 	public static class BootstrapMethod {
 		MethodHandleInfo bootstrapMethodRef;
 		Object[] bootstrapArguments;
-
+		
 		public BootstrapMethod(MethodHandleInfo bootstrapMethodRef, Object[] bootstrapArguments) {
 			this.bootstrapMethodRef = bootstrapMethodRef;
 			this.bootstrapArguments = bootstrapArguments;
 		}
-
+		
 	}
-
+	
 }
