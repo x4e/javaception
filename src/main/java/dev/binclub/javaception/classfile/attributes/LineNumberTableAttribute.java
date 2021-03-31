@@ -12,7 +12,7 @@ public class LineNumberTableAttribute extends AttributeInfo {
 	LineInfo[] lineNumberTable;
 	
 	public LineNumberTableAttribute(int attributeLength, DataInputStream dis) throws IOException {
-		super("LineNumberTable", attributeLength);
+		super("LineNumberTable");
 		lineNumberTableLength = dis.readUnsignedShort();
 		if (lineNumberTableLength != 0) {
 			lineNumberTable = new LineInfo[lineNumberTableLength];

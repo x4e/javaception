@@ -1,7 +1,7 @@
 package dev.binclub.javaception.classloader;
 
-import dev.binclub.javaception.classfile.ArrayKlass;
-import dev.binclub.javaception.classfile.Klass;
+import dev.binclub.javaception.klass.ArrayKlass;
+import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.SystemDictionary;
 import dev.binclub.javaception.type.ArrayType;

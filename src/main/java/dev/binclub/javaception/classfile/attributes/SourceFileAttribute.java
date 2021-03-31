@@ -9,7 +9,7 @@ public class SourceFileAttribute extends AttributeInfo {
 	int sourceFileIndex;
 	
 	public SourceFileAttribute(int attributeLength, DataInputStream dis) throws IOException {
-		super("SourceFile", attributeLength);
+		super("SourceFile");
 		this.sourceFileIndex = dis.readUnsignedShort();
 	}
 	

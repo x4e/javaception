@@ -14,7 +14,7 @@ public class ExceptionsAttribute extends AttributeInfo {
 	
 	public ExceptionsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
 		throws IOException {
-		super("Exceptions", attributeLength);
+		super("Exceptions");
 		numberOfExceptions = dis.readUnsignedShort();
 		if (numberOfExceptions != 0) {
 			exceptionIndexTable = new ClassInfo[numberOfExceptions];

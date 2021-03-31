@@ -12,7 +12,7 @@ public class LocalVariableTableAttribute extends AttributeInfo {
 	
 	public LocalVariableTableAttribute(int attributeLength, DataInputStream dis)
 		throws IOException {
-		super("LocalVariableTable", attributeLength);
+		super("LocalVariableTable");
 		localVariableTableLength = dis.readUnsignedShort();
 		if (localVariableTableLength != 0) {
 			localVariableTable = new LocalVariableTable[localVariableTableLength];

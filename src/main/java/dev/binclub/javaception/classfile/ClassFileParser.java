@@ -9,6 +9,9 @@ import dev.binclub.javaception.classfile.constants.MethodTypeInfo;
 import dev.binclub.javaception.classfile.constants.NameAndTypeInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
 import dev.binclub.javaception.classfile.constants.UnresolvedString;
+import dev.binclub.javaception.classloader.KlassLoader;
+import dev.binclub.javaception.klass.Klass;
+import dev.binclub.javaception.oop.InstanceOop;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -17,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.*;
+
 public class ClassFileParser {
 	
-	// the value of the tag byte acts as the index to get the type
-	public static final ConstantTypes[] types = ConstantTypes.values();
 	// public for testing
 	public Object[] constantPool;
 	// public for testing
@@ -29,24 +32,23 @@ public class ClassFileParser {
 	int majorVersion;
 	int minorVersion;
 	int access;
-	int interfacesCount;
 	int fieldsCount;
 	int methodsCount;
 	int attributesCount;
 	String className;
 	String superClass;
 	DataInputStream dis;
-	ClassInfoCP[] interfaces;
+	Klass[] interfaces;
 	FieldInfo[] fields;
 	AttributeInfo[] attributes;
 	
-	public ClassFileParser(byte[] classBytes) throws Throwable {
+	public ClassFileParser(byte[] classBytes, InstanceOop loader) throws Throwable {
 		if (classBytes.length < 4) {
 			// need atleast 4 bytes get magic number
 			throw new ClassFormatError();
 		}
 		
-		parseClass(classBytes);
+		parseClass(classBytes, loader);
 		
 	}
 	
@@ -86,7 +88,7 @@ public class ClassFileParser {
 		return "hello " + text;
 	}
 	
-	public void parseClass(byte[] classBytes) throws Throwable {
+	public void parseClass(byte[] classBytes, InstanceOop loader) throws Throwable {
 		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
 		int magic = dis.readInt();
 		if (magic != 0xCAFEBABE) {
@@ -97,15 +99,19 @@ public class ClassFileParser {
 		constantPoolCount = dis.readUnsignedShort();
 		constantPool = new Object[constantPoolCount - 1];
 		// force enum to resolve
-		ConstantTypes.values();
 		parseConstantPool();
 		access = dis.readUnsignedShort();
 		int classNameIndex = dis.readUnsignedShort();
 		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName();
 		int superClassNameIndex = dis.readUnsignedShort();
 		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName();
-		interfacesCount = dis.readUnsignedShort();
-		getInterfaces();
+		
+		int interfacesCount = dis.readUnsignedShort();
+		interfaces = new Klass[interfacesCount];
+		for (int i = 0; i < interfacesCount; i++) {
+			interfaces[i] = KlassLoader.loadClass(loader, (String) constantPool[dis.readUnsignedShort() - 1]);
+		}
+		
 		fieldsCount = dis.readUnsignedShort();
 		readFields();
 		methodsCount = dis.readUnsignedShort();
@@ -158,76 +164,64 @@ public class ClassFileParser {
 		}
 	}
 	
-	public void getInterfaces() throws Throwable {
-		interfaces = new ClassInfoCP[interfacesCount];
-		for (int i = 0; i < interfacesCount; i++) {
-			interfaces[i] = (ClassInfoCP) constantPool[dis.readUnsignedShort() - 1];
-		}
-	}
-	
 	public void parseConstantPool() throws Throwable {
 		
 		for (int i = 0; i < constantPoolCount - 1; i++) {
 			int tag = dis.readUnsignedByte();
-			ConstantTypes type = types[tag];
-			switch (type) {
-			case CLASS:
+			switch (tag) {
+			case CONSTANT_Class:
 				constantPool[i] = new ClassInfo(dis.readUnsignedShort());
 				break;
-			case DOUBLE:
+			case CONSTANT_Double:
 				constantPool[i] = dis.readDouble();
 				break;
-			case FIELDREF:
+			case CONSTANT_Fieldref:
 				int classIndex = dis.readUnsignedShort();
 				int nameAndTypeIndex = dis.readUnsignedShort();
 				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
 				break;
-			case FLOAT:
+			case CONSTANT_Float:
 				constantPool[i] = dis.readFloat();
 				break;
-			case INTEGER:
+			case CONSTANT_Integer:
 				constantPool[i] = dis.readInt();
 				break;
-			case INTERFACEMETHODREF:
+			case CONSTANT_Methodref:
+			case CONSTANT_InterfaceMethodref:
 				classIndex = dis.readUnsignedShort();
 				nameAndTypeIndex = dis.readUnsignedShort();
 				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
 				break;
-			case INVOKEDYNAMIC:
+			case CONSTANT_InvokeDynamic:
 				int bootstrapMethodAttrIndex = dis.readUnsignedShort();
 				nameAndTypeIndex = dis.readUnsignedShort();
 				constantPool[i] = new InvokeDynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);
 				break;
-			case LONG:
+			case CONSTANT_Long:
 				constantPool[i] = dis.readLong();
 				break;
-			case METHODHANDLE:
+			case CONSTANT_MethodHandle:
 				int referenceKind = dis.readUnsignedByte();
 				int referenceIndex = dis.readUnsignedShort();
 				constantPool[i] = new MethodHandleInfo(referenceKind, referenceIndex);
 				break;
-			case METHODREF:
-				classIndex = dis.readUnsignedShort();
-				nameAndTypeIndex = dis.readUnsignedShort();
-				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex);
-				break;
-			case METHODTYPE:
+			case CONSTANT_MethodType:
 				int descriptorIndex = dis.readUnsignedShort();
 				constantPool[i] = new MethodTypeInfo(descriptorIndex);
 				break;
-			case NAMEANDTYPE:
+			case CONSTANT_NameAndType:
 				int nameIndex = dis.readUnsignedShort();
 				descriptorIndex = dis.readUnsignedShort();
 				constantPool[i] = new NameAndTypeInfo(nameIndex, descriptorIndex);
 				break;
-			case STRING:
+			case CONSTANT_String:
 				int stringIndex = dis.readUnsignedShort();
 				constantPool[i] = new UnresolvedString(stringIndex);
 				break;
-			case UTF8:
+			case CONSTANT_Utf8:
 				constantPool[i] = dis.readUTF();
 				break;
-			case DYNAMIC:
+			case CONSTANT_Dynamic:
 				bootstrapMethodAttrIndex = dis.readUnsignedShort();
 				nameAndTypeIndex = dis.readUnsignedShort();
 				constantPool[i] = new DynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);

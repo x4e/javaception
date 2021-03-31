@@ -13,7 +13,7 @@ public class BootstrapMethodsAttribute extends AttributeInfo {
 	
 	public BootstrapMethodsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
 		throws IOException {
-		super("BootstrapMethods", attributeLength);
+		super("BootstrapMethods");
 		numBootstrapMethods = dis.readUnsignedShort();
 		bootstrapMethods = new BootstrapMethod[numBootstrapMethods];
 		for (int i = 0; i < numBootstrapMethods; i++) {

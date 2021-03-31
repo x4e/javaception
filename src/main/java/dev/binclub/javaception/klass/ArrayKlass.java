@@ -1,4 +1,4 @@
-package dev.binclub.javaception.classfile;
+package dev.binclub.javaception.klass;
 
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.SystemDictionary;

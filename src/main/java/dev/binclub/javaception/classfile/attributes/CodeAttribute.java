@@ -2,7 +2,6 @@ package dev.binclub.javaception.classfile.attributes;
 
 import dev.binclub.javaception.classfile.AttributeInfo;
 import dev.binclub.javaception.classfile.ClassFileParser;
-import dev.binclub.javaception.classfile.ExceptionData;
 import dev.binclub.javaception.classfile.InstructionParser;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 
@@ -23,7 +22,7 @@ public class CodeAttribute extends AttributeInfo {
 	
 	public CodeAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
 		throws IOException {
-		super("Code", attributeLength);
+		super("Code");
 		maxStack = dis.readUnsignedShort();
 		maxLocals = dis.readUnsignedShort();
 		codeLength = dis.readInt();
@@ -60,4 +59,19 @@ public class CodeAttribute extends AttributeInfo {
 		return instructions;
 	}
 	
+	
+	private static class ExceptionData {
+		int startPc;
+		int endPc;
+		int handlerPc;
+		int catchType;
+		
+		public ExceptionData(int startPc, int endPc, int handlerPc, int catchType) {
+			super();
+			this.startPc = startPc;
+			this.endPc = endPc;
+			this.handlerPc = handlerPc;
+			this.catchType = catchType;
+		}
+	}
 }

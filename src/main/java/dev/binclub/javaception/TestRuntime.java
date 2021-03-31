@@ -20,7 +20,7 @@ public class TestRuntime {
 			bos.write(bytes);
 		}
 		InstructionRegistry.init();
-		ClassFileParser klassFile = new ClassFileParser(bos.toByteArray());
+		ClassFileParser klassFile = new ClassFileParser(bos.toByteArray(), null);
 		for (MethodInfo method : klassFile.methods) {
 			if (method.getName(klassFile.constantPool).equals("addTest")) {
 				Object result = ExecutionEngine.invokeMethodObj(null, method, 5, 5);
