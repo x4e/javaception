@@ -26,7 +26,7 @@ import dev.binclub.javaception.classfile.constants.UnresolvedString;
 public class ClassFileParser {
 
 	// the value of the tag byte acts as the index to get the type
-	public static final ConstantTypes[] types = new ConstantTypes[21];
+	public static final ConstantTypes[] types = ConstantTypes.values();
 
 	int constantPoolCount;
 	int majorVersion;
