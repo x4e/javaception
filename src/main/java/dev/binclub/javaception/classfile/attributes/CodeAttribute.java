@@ -9,34 +9,37 @@ import java.io.IOException;
 import java.util.List;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Code;
+import static dev.binclub.javaception.utils.ByteUtils.*;
 
 public class CodeAttribute extends AttributeInfo {
 	int maxStack;
 	int maxLocals;
+	byte[] code;
+	int codeOffset;
+	int codeEnd;
 	List<SimpleInstruction> instructions;
 	ExceptionData[] exceptions;
 	List<AttributeInfo> attributes;
 	
-	public CodeAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+	public CodeAttribute(ClassFileParser parser, byte[] data, int offset, Object[] constantPool) throws IOException {
 		super(Attribute_Code);
-		maxStack = dis.readUnsignedShort();
-		maxLocals = dis.readUnsignedShort();
-		int codeLength = dis.readInt();
-		int[] code = new int[codeLength];
-		for (int i = 0; i < codeLength; i++) {
-			code[i] = dis.readUnsignedByte();
-		}
-		int exceptionTableLength = dis.readUnsignedShort();
+		maxStack = readUnsignedShort(data, offset);
+		maxLocals = readUnsignedShort(data, offset + 2);
+		int codeLength = readInt(data, offset + 4);
+		codeOffset = offset + 8;
+		codeEnd = codeOffset + codeLength;
+		int exceptionTableLength = readUnsignedShort(data, codeEnd);
+		offset = codeEnd + 2;
 		exceptions = new ExceptionData[exceptionTableLength];
 		for (int i = 0; i < exceptionTableLength; i++) {
-			int startPc = dis.readUnsignedShort();
-			int endPc = dis.readUnsignedShort();
-			int handlerPc = dis.readUnsignedShort();
-			int catchType = dis.readUnsignedShort();
+			int startPc = readUnsignedShort(data, offset);
+			int endPc = readUnsignedShort(data, offset + 2);
+			int handlerPc = readUnsignedShort(data, offset + 4);
+			int catchType = readUnsignedShort(data, offset + 6);
 			exceptions[i] = new ExceptionData(startPc, endPc, handlerPc, catchType);
+			offset += 8;
 		}
-		attributes = ClassFileParser.readAttributes(dis, constantPool, 3);
-		//instructions = InstructionParser.parseCode(code, constantPool);
+		attributes = parser.readAttributes(offset, constantPool, 3);
 	}
 	
 	public int getMaxStack() {

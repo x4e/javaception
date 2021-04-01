@@ -9,21 +9,11 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Lin
 
 
 public class LineNumberTableAttribute extends AttributeInfo {
-	int lineNumberTableLength;
-	LineInfo[] lineNumberTable;
+	public final LineInfo[] lineNumberTable;
 	
-	public LineNumberTableAttribute(DataInputStream dis) throws IOException {
+	public LineNumberTableAttribute(LineInfo[] lineNumberTable) throws IOException {
 		super(Attribute_LineNumberTable);
-		lineNumberTableLength = dis.readUnsignedShort();
-		if (lineNumberTableLength != 0) {
-			lineNumberTable = new LineInfo[lineNumberTableLength];
-			for (int i = 0; i < lineNumberTableLength; i++) {
-				int startPc = dis.readUnsignedShort();
-				int lineNumber = dis.readUnsignedShort();
-				lineNumberTable[i] = new LineInfo(startPc, lineNumber);
-			}
-		}
-		
+		this.lineNumberTable = lineNumberTable;
 	}
 	
 	public static class LineInfo {

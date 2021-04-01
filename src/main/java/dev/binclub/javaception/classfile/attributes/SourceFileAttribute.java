@@ -9,10 +9,10 @@ import java.io.IOException;
 import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_SourceFile;
 
 public class SourceFileAttribute extends AttributeInfo {
-	String sourceFile;
+	public final String sourceFile;
 	
-	public SourceFileAttribute(DataInputStream dis, Object[] cp) throws IOException {
+	public SourceFileAttribute(String sourceFile) throws IOException {
 		super(Attribute_SourceFile);
-		this.sourceFile = ((UtfInfo) cp[dis.readUnsignedShort() - 1]).get();
+		this.sourceFile = sourceFile;
 	}
 }

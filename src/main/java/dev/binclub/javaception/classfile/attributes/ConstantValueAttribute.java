@@ -9,10 +9,10 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Con
 
 
 public class ConstantValueAttribute extends AttributeInfo {
-	Object constantValue;
+	public final Object constantValue;
 	
-	public ConstantValueAttribute(DataInputStream dis, Object[] cp) throws IOException {
+	public ConstantValueAttribute(Object constantValue) throws IOException {
 		super(Attribute_ConstantValue);
-		constantValue = cp[dis.readUnsignedShort() - 1];
+		this.constantValue = constantValue;
 	}
 }

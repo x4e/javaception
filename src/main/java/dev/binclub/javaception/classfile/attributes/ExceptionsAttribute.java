@@ -11,16 +11,10 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Exc
 
 
 public class ExceptionsAttribute extends AttributeInfo {
-	ClassInfo[] exceptionsTable;
+	public final ClassInfo[] exceptionsTable;
 	
-	public ExceptionsAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+	public ExceptionsAttribute(ClassInfo[] exceptionsTable) throws IOException {
 		super(Attribute_Exceptions);
-		int numberOfExceptions = dis.readUnsignedShort();
-		exceptionsTable = new ClassInfo[numberOfExceptions];
-		for (int i = 0; i < numberOfExceptions; i++) {
-			int index = dis.readUnsignedShort();
-			exceptionsTable[i] = (ClassInfo) constantPool[index - 1];
-		}
-		System.out.printf("Exceptions: %s%n", Arrays.toString(exceptionsTable));
+		this.exceptionsTable = exceptionsTable;
 	}
 }

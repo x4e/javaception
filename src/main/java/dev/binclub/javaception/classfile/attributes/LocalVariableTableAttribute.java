@@ -9,23 +9,11 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Loc
 
 
 public class LocalVariableTableAttribute extends AttributeInfo {
-	int localVariableTableLength;
-	LocalVariableTable[] localVariableTable;
+	public final LocalVariableTable[] localVariableTable;
 	
-	public LocalVariableTableAttribute(DataInputStream dis) throws IOException {
+	public LocalVariableTableAttribute(LocalVariableTable[] localVariableTable) throws IOException {
 		super(Attribute_LocalVariableTable);
-		localVariableTableLength = dis.readUnsignedShort();
-		if (localVariableTableLength != 0) {
-			localVariableTable = new LocalVariableTable[localVariableTableLength];
-			for (int i = 0; i < localVariableTableLength; i++) {
-				int startPc = dis.readUnsignedShort();
-				int length = dis.readUnsignedShort();
-				int nameIndex = dis.readUnsignedShort();
-				int descriptorIndex = dis.readUnsignedShort();
-				int index = dis.readUnsignedShort();
-				localVariableTable[i] = new LocalVariableTable(startPc, length, nameIndex, descriptorIndex, index);
-			}
-		}
+		this.localVariableTable = localVariableTable;
 	}
 	
 	public static class LocalVariableTable {
