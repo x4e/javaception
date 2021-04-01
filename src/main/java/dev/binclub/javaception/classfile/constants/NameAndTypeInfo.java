@@ -9,12 +9,11 @@ public class NameAndTypeInfo {
 		this.descriptorIndex = descriptorIndex;
 	}
 	
-	public String getName() {
-		return name;
+	public Object resolve(Object[] cp) {
+		UtfInfo utf = (UtfInfo) cp[nameIndex - 1];
+		if (utf != null) name = utf.get();
+		utf = (UtfInfo) cp[nameIndex - 1];
+		if (utf != null) description = utf.get();
+		return this;
 	}
-	
-	public String getDescription() {
-		return description;
-	}
-	
 }

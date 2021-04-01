@@ -2,14 +2,14 @@ package dev.binclub.javaception.classfile.constants;
 
 public class MethodTypeInfo {
 	public final int descriptorIndex;
-	public String methodDescription;
+	public String descriptor;
 	
 	public MethodTypeInfo(int descriptorIndex) {
 		this.descriptorIndex = descriptorIndex;
 	}
 	
-	public String getMethodDescription() {
-		return methodDescription;
+	public Object resolve(Object[] cp) {
+		descriptor = (String) cp[descriptorIndex - 1];
+		return this;
 	}
-	
 }

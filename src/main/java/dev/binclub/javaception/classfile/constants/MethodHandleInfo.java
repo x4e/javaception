@@ -11,8 +11,9 @@ public class MethodHandleInfo {
 		this.referenceIndex = referenceIndex;
 	}
 	
-	public RefInfo getReferenceInfo() {
-		return refInfo;
+	public Object resolve(Object[] cp) {
+		refInfo = (RefInfo) cp[referenceIndex - 1];
+		return this;
 	}
 	
 	public enum HandleTypes {

@@ -5,17 +5,17 @@ import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 import java.util.List;
 
 public class MethodInfo {
-	public int access;
-	int nameIndex;
-	int descriptorIndex;
+	public final int access;
+	public final String name;
+	public final String descriptor;
 	List<AttributeInfo> attributes;
 	// for fast lookup
 	CodeAttribute codeAttribute;
 	
-	public MethodInfo(int access, int nameIndex, int descriptorIndex, List<AttributeInfo> attributes) {
+	public MethodInfo(int access, String name, String descriptor, List<AttributeInfo> attributes) {
 		this.access = access;
-		this.nameIndex = nameIndex;
-		this.descriptorIndex = descriptorIndex;
+		this.name = name;
+		this.descriptor = descriptor;
 		this.attributes = attributes;
 		for (AttributeInfo attribute : attributes) {
 			if (attribute instanceof CodeAttribute) {
@@ -23,14 +23,6 @@ public class MethodInfo {
 				break;
 			}
 		}
-	}
-	
-	public String getName(Object[] constantPool) {
-		return (String) constantPool[nameIndex - 1];
-	}
-	
-	public String getSignature(Object[] constantPool) {
-		return (String) constantPool[descriptorIndex - 1];
 	}
 	
 	public CodeAttribute getCodeAttribute() {

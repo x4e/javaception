@@ -3,15 +3,15 @@ package dev.binclub.javaception.classfile;
 import java.util.List;
 
 public class FieldInfo {
-	public final  int access;
-	public final  int nameIndex;
-	public final  int descriptorIndex;
+	public final int access;
+	public final String name;
+	public final String descriptor;
 	public final List<AttributeInfo> attributes;
 	
-	public FieldInfo(int access, int nameIndex, int descriptorIndex, List<AttributeInfo> attributes) {
+	public FieldInfo(int access, String name, String descriptor, List<AttributeInfo> attributes) {
 		this.access = access;
-		this.nameIndex = nameIndex;
-		this.descriptorIndex = descriptorIndex;
+		this.name = name;
+		this.descriptor = descriptor;
 		this.attributes = attributes;
 	}
 }

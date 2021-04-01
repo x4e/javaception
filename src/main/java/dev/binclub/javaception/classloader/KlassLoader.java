@@ -24,6 +24,13 @@ public class KlassLoader {
 		return classCache.computeIfAbsent(classLoader, k -> new HashMap<>());
 	}
 	
+	static {
+		bootstrapClasses.put(
+			"java/lang/Object",
+			new Klass(null, null, "java/lang/Object", null)
+		);
+	}
+	
 	/**
 	 * Create the array class denoted by arrayType
 	 *

@@ -11,12 +11,13 @@ public class DynamicInfo {
 		this.nameAndTypeIndex = nameAndTypeIndex;
 	}
 	
+	public Object resolve(Object[] cp) {
+		nameAndTypeInfo = (NameAndTypeInfo) cp[nameAndTypeIndex - 1];
+		return this;
+	}
+	
 	public BootstrapMethod getBootstrapMethod(BootstrapMethod[] bootstrapMethods) {
 		// potentially need to sub one from attrIndex?
 		return bootstrapMethods[bootstrapMethodAttrIndex];
-	}
-	
-	public NameAndTypeInfo getFieldNameAndTypeInfo(Object[] constantPool) {
-		return nameAndTypeInfo;
 	}
 }

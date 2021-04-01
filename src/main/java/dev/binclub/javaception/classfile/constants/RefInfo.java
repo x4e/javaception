@@ -10,12 +10,9 @@ public class RefInfo {
 		this.nameAndTypeIndex = nameAndTypeIndex;
 	}
 	
-	public ClassInfo getClassInfo() {
-		return classInfo;
+	public Object resolve(Object[] cp) {
+		classInfo = (ClassInfo) cp[classIndex - 1];
+		nameAndTypeInfo = (NameAndTypeInfo) cp[nameAndTypeIndex - 1];
+		return this;
 	}
-	
-	public NameAndTypeInfo getNameAndTypeInfo() {
-		return nameAndTypeInfo;
-	}
-	
 }

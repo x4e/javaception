@@ -4,12 +4,27 @@ import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.attributes.CodeAttribute;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 import dev.binclub.javaception.oop.InstanceOop;
+import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorIAdd;
+import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorILoad;
+import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorXReturn;
 
 import java.lang.reflect.Modifier;
 
 public class ExecutionEngine {
 	
 	public static InstructionExecutor[] instructionExecutors = new InstructionExecutor[256];
+	
+	static {
+		setRange(0x1a, 0x1d, new ExecutorILoad());
+		ExecutionEngine.instructionExecutors[0x60] = new ExecutorIAdd();
+		setRange(0xac, 0xb0, new ExecutorXReturn());
+	}
+	
+	private static void setRange(int lowerBound, int upperBound, InstructionExecutor executor) {
+		for (int i = lowerBound; i <= upperBound; i++) {
+			ExecutionEngine.instructionExecutors[i] = executor;
+		}
+	}
 	
 	// invokes method expecting a return obj to but put onto the caller stack
 	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) throws Throwable {

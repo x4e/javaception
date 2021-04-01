@@ -5,7 +5,7 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 public class OpcodeStride {
 	// number of bytes an opcodes operands take
 	// -1 for variable length operands
-	static int[] strideAmount = new int[OPC_MAX];
+	static int[] strideAmount = new int[OPC_MAX + 1];
 	
 	static {
 		strideAmount[BIPUSH] = 1;

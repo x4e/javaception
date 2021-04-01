@@ -2,7 +2,6 @@ package dev.binclub.javaception.classfile.attributes;
 
 import dev.binclub.javaception.classfile.AttributeInfo;
 import dev.binclub.javaception.classfile.ClassFileParser;
-import dev.binclub.javaception.classfile.InstructionParser;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 
 import java.io.DataInputStream;
@@ -37,7 +36,7 @@ public class CodeAttribute extends AttributeInfo {
 			exceptions[i] = new ExceptionData(startPc, endPc, handlerPc, catchType);
 		}
 		attributes = ClassFileParser.readAttributes(dis, constantPool, 3);
-		instructions = InstructionParser.parseCode(code, constantPool);
+		//instructions = InstructionParser.parseCode(code, constantPool);
 	}
 	
 	public int getMaxStack() {

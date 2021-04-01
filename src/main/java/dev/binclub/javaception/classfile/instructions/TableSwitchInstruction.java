@@ -1,21 +1,17 @@
 package dev.binclub.javaception.classfile.instructions;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.TABLESWITCH;
+
 public class TableSwitchInstruction extends SimpleInstruction {
+	public final int high, low, dflt;
+	public SimpleInstruction[] branches;
+	public SimpleInstruction defaultInstruction;
 	
-	//misspelled on purpose
-	public final int high, low, defalt;
-	SimpleInstruction[] branches;
-	SimpleInstruction defaultInstruction;
-	
-	public TableSwitchInstruction(int high, int low, int defalt) {
-		super(0xaa);
+	public TableSwitchInstruction(int high, int low, int dflt) {
+		super(TABLESWITCH);
 		this.high = high;
 		this.low = low;
-		this.defalt = defalt;
-	}
-	
-	public SimpleInstruction[] getJumpOffsets() {
-		return branches;
+		this.dflt = dflt;
 	}
 	
 	//to be used by the instruction parser
@@ -31,5 +27,4 @@ public class TableSwitchInstruction extends SimpleInstruction {
 	public void setDefaultInstruction(SimpleInstruction defaultInstruction) {
 		this.defaultInstruction = defaultInstruction;
 	}
-	
 }
