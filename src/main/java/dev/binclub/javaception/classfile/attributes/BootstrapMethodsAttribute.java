@@ -6,15 +6,14 @@ import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_BootstrapMethods;
+
 public class BootstrapMethodsAttribute extends AttributeInfo {
-	
-	int numBootstrapMethods;
 	BootstrapMethod[] bootstrapMethods;
 	
-	public BootstrapMethodsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
-		throws IOException {
-		super("BootstrapMethods");
-		numBootstrapMethods = dis.readUnsignedShort();
+	public BootstrapMethodsAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+		super(Attribute_BootstrapMethods);
+		int numBootstrapMethods = dis.readUnsignedShort();
 		bootstrapMethods = new BootstrapMethod[numBootstrapMethods];
 		for (int i = 0; i < numBootstrapMethods; i++) {
 			int bootstrapMethodRef = dis.readUnsignedShort();
@@ -39,5 +38,4 @@ public class BootstrapMethodsAttribute extends AttributeInfo {
 		}
 		
 	}
-	
 }

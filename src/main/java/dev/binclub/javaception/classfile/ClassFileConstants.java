@@ -60,6 +60,36 @@ public class ClassFileConstants {
 	public static final int ACC_MANDATED = 0x8000;
 	public static final int ACC_MODULE = 0x8000;
 	
+	public static final String Attribute_ConstantValue = "ConstantValue";
+	public static final String Attribute_Code = "Code";
+	public static final String Attribute_StackMapTable = "StackMapTable";
+	public static final String Attribute_Exceptions = "Exceptions";
+	public static final String Attribute_InnerClasses = "InnerClasses";
+	public static final String Attribute_EnclosingMethod = "EnclosingMethod";
+	public static final String Attribute_Synthetic = "Synthetic";
+	public static final String Attribute_Signature = "Signature";
+	public static final String Attribute_SourceFile = "SourceFile";
+	public static final String Attribute_SourceDebugExtension = "SourceDebugExtension";
+	public static final String Attribute_LineNumberTable = "LineNumberTable";
+	public static final String Attribute_LocalVariableTable = "LocalVariableTable";
+	public static final String Attribute_LocalVariableTypeTable = "LocalVariableTypeTable";
+	public static final String Attribute_Deprecated = "Deprecated";
+	public static final String Attribute_RuntimeVisibleAnnotations = "RuntimeVisibleAnnotations";
+	public static final String Attribute_RuntimeInvisibleAnnotations = "RuntimeInvisibleAnnotations";
+	public static final String Attribute_RuntimeVisibleParameterAnnotations = "RuntimeVisibleParameterAnnotations";
+	public static final String Attribute_RuntimeInvisibleParameterAnnotations = "RuntimeInvisibleParameterAnnotations";
+	public static final String Attribute_RuntimeVisibleTypeAnnotations = "RuntimeVisibleTypeAnnotations";
+	public static final String Attribute_RuntimeInvisibleTypeAnnotations = "RuntimeInvisibleTypeAnnotations";
+	public static final String Attribute_AnnotationDefault = "AnnotationDefault";
+	public static final String Attribute_BootstrapMethods = "BootstrapMethods";
+	public static final String Attribute_MethodParameters = "MethodParameters";
+	public static final String Attribute_Module = "Module";
+	public static final String Attribute_ModulePackages = "ModulePackages";
+	public static final String Attribute_ModuleMainClass = "ModuleMainClass";
+	public static final String Attribute_NestHost = "NestHost";
+	public static final String Attribute_NestMembers = "NestMembers";
+	public static final String Attribute_Record = "Record";
+	
 	public static final int NOP = 0;
 	public static final int ACONST_NULL = 1;
 	public static final int ICONST_M1 = 2;

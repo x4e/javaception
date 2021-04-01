@@ -1,6 +1,6 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.attributes.LookupSwitchInstruction;
+import dev.binclub.javaception.classfile.instructions.LookupSwitchInstruction;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InstructionParser {
-	
 	public static List<SimpleInstruction> parseCode(int[] code, Object[] constantPool) {
-		
 		SimpleInstruction[] insts = new SimpleInstruction[code.length];
 		int instructionPointer = 0;
 		for (int i = 0; i < code.length; i++) {

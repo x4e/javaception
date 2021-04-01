@@ -18,7 +18,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
@@ -26,23 +25,20 @@ public class ClassFileParser {
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
 	
-	// public for testing
-	public Object[] constantPool;
-	// public for testing
-	public MethodInfo[] methods;
-	int constantPoolCount;
-	int majorVersion;
-	int minorVersion;
-	int access;
-	int fieldsCount;
-	int methodsCount;
-	int attributesCount;
-	String className;
-	String superClass;
-	DataInputStream dis;
-	Klass[] interfaces;
-	FieldInfo[] fields;
-	AttributeInfo[] attributes;
+	public final DataInputStream dis;
+	
+	public final Object[] constantPool;
+	public final int constantPoolCount;
+	public final int majorVersion;
+	public final int minorVersion;
+	public final int access;
+	public final String className;
+	public final Klass superClass;
+	public final Klass[] interfaces;
+	
+	public final FieldInfo[] fields;
+	public final MethodInfo[] methods;
+	public final List<AttributeInfo> attributes;
 	
 	public ClassFileParser(byte[] classBytes, InstanceOop loader) throws Throwable {
 		dis = new DataInputStream(new ByteArrayInputStream(classBytes));
@@ -66,7 +62,7 @@ public class ClassFileParser {
 		int classNameIndex = dis.readUnsignedShort();
 		className = ((ClassInfo) constantPool[classNameIndex - 1]).getClassName();
 		int superClassNameIndex = dis.readUnsignedShort();
-		superClass = ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName();
+		superClass = KlassLoader.loadClass(loader, ((ClassInfo) constantPool[superClassNameIndex - 1]).getClassName());
 		
 		int interfacesCount = dis.readUnsignedShort();
 		interfaces = new Klass[interfacesCount];
@@ -78,97 +74,91 @@ public class ClassFileParser {
 			throw new NoClassDefFoundError("%s is not a class because access_flag ACC_MODULE is set".formatted(className));
 		}
 		
-		
-		fieldsCount = dis.readUnsignedShort();
-		readFields();
-		methodsCount = dis.readUnsignedShort();
-		readMethods();
-		attributesCount = dis.readUnsignedShort();
-		attributes = new AttributeInfo[attributesCount];
-		for (int i = 0; i < attributesCount; i++) {
-			attributes[i] = readAttribute(dis, constantPool);
-		}
-	}
-	
-	public static AttributeInfo readAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
-		int attributeNameIndex = dis.readUnsignedShort();
-		int attributeLength = dis.readInt();
-		String name = (String) constantPool[attributeNameIndex - 1];
-		switch (name) {
-		case "Code":
-			return new CodeAttribute(attributeLength, dis, constantPool);
-		case "StackMapTable":
-			return new StackMapTableAttribute(attributeLength, dis);
-		case "Exceptions":
-			return new ExceptionsAttribute(attributeLength, dis, constantPool);
-		case "LineNumberTable":
-			return new LineNumberTableAttribute(attributeLength, dis);
-		case "LocalVariableTable":
-			return new LocalVariableTableAttribute(attributeLength, dis);
-		case "SourceFile":
-			return new SourceFileAttribute(attributeLength, dis);
-		case "BootstrapMethods":
-			return new BootstrapMethodsAttribute(attributeLength, dis, constantPool);
-		default:
-			System.out.println("skipping attrib type " + name);
-			dis.skipBytes(attributeLength);
-			break;
-		}
-		return null;
-	}
-	
-	//stuff for testing
-	public static int addTest(int a, int b) {
-		return a + b;
-	}
-	
-	public static String appendTest(String text) {
-		return "hello " + text;
-	}
-	
-	public void readMethods() throws IOException {
-		methods = new MethodInfo[methodsCount];
-		for (int i = 0; i < methodsCount; i++) {
-			int access = dis.readUnsignedShort();
-			int nameIndex = dis.readUnsignedShort();
-			int descriptorIndex = dis.readUnsignedShort();
-			int attributesCount = dis.readUnsignedShort();
-			List<AttributeInfo> attributes = new ArrayList<>();
-			if (attributesCount != 0) {
-				for (int j = 0; j < attributesCount; j++) {
-					AttributeInfo attribute = readAttribute(dis, constantPool);
-					if (attribute != null) {
-						attributes.add(attribute);
-					}
-				}
-			}
-			methods[i] = new MethodInfo(access, nameIndex, descriptorIndex, attributes);
-			
-		}
-	}
-	
-	public void readFields() throws Throwable {
+		int fieldsCount = dis.readUnsignedShort();
 		fields = new FieldInfo[fieldsCount];
 		for (int i = 0; i < fieldsCount; i++) {
 			int access = dis.readUnsignedShort();
 			int nameIndex = dis.readUnsignedShort();
 			int descriptorIndex = dis.readUnsignedShort();
-			int attributesCount = dis.readUnsignedShort();
-			List<AttributeInfo> attributes = new ArrayList<>();
-			if (attributesCount != 0) {
-				for (int j = 0; j < attributesCount; j++) {
-					AttributeInfo attribute = readAttribute(dis, constantPool);
-					if (attribute != null) {
-						attributes.add(attribute);
-					}
-				}
-			}
+			List<AttributeInfo> attributes = readAttributes(dis, constantPool, 1);
 			fields[i] = new FieldInfo(access, nameIndex, descriptorIndex, attributes);
 		}
+		
+		int methodsCount = dis.readUnsignedShort();
+		methods = new MethodInfo[methodsCount];
+		for (int i = 0; i < methodsCount; i++) {
+			int access = dis.readUnsignedShort();
+			int nameIndex = dis.readUnsignedShort();
+			int descriptorIndex = dis.readUnsignedShort();
+			List<AttributeInfo> attributes = readAttributes(dis, constantPool, 2);
+			methods[i] = new MethodInfo(access, nameIndex, descriptorIndex, attributes);
+			
+		}
+		
+		attributes = readAttributes(dis, constantPool, 0);
 	}
 	
-	public void parseConstantPool() throws Throwable {
-		
+	/**
+	 * @param source 0 = class, 1 = field, 2 = method, 3 = code
+	 */
+	public static List<AttributeInfo> readAttributes(DataInputStream dis, Object[] constantPool, int source) throws IOException {
+		int attributesCount = dis.readUnsignedShort();
+		ArrayList<AttributeInfo> attributes = new ArrayList<>(attributesCount);
+		for (int i = 0; i < attributesCount; i++) {
+			int attributeNameIndex = dis.readUnsignedShort();
+			int attributeLength = dis.readInt();
+			String name = (String) constantPool[attributeNameIndex - 1];
+			
+			switch (name) {
+			case Attribute_Code:
+				if (source == 2) {
+					attributes.add(new CodeAttribute(dis, constantPool));
+				}
+				break;
+			case Attribute_StackMapTable:
+				if (source == 3) {
+					attributes.add(new StackMapTableAttribute(attributeLength, dis));
+				}
+				break;
+			case Attribute_Exceptions:
+				if (source == 3) {
+					attributes.add(new ExceptionsAttribute(dis, constantPool));
+				}
+				break;
+			case Attribute_LineNumberTable:
+				if (source == 3) {
+					attributes.add(new LineNumberTableAttribute(dis));
+				}
+				break;
+			case Attribute_LocalVariableTable:
+				if (source == 3) {
+					attributes.add(new LocalVariableTableAttribute(dis));
+				}
+				break;
+			case Attribute_SourceFile:
+				if (source == 0) {
+					attributes.add(new SourceFileAttribute(dis, constantPool));
+				}
+				break;
+			case Attribute_BootstrapMethods:
+				if (source == 0) {
+					attributes.add(new BootstrapMethodsAttribute(dis, constantPool));
+				}
+				break;
+			case Attribute_ConstantValue:
+				if (source == 1) {
+					attributes.add(new ConstantValueAttribute(dis, constantPool));
+				}
+				break;
+			default:
+				dis.skipBytes(attributeLength);
+				break;
+			}
+		}
+		return attributes;
+	}
+	
+	private void parseConstantPool() throws Throwable {
 		for (int i = 0; i < constantPoolCount - 1; i++) {
 			int tag = dis.readUnsignedByte();
 			switch (tag) {
@@ -230,8 +220,7 @@ public class ClassFileParser {
 				constantPool[i] = new DynamicInfo(bootstrapMethodAttrIndex, nameAndTypeIndex);
 				break;
 			default:
-				throw new ClassFormatError("Unsupported constant type");
-				
+				throw new ClassFormatError("bad constant pool tag value %d".formatted(tag));
 			}
 		}
 		// make sure a string can always be referenced this avoids nullptr references
@@ -266,8 +255,7 @@ public class ClassFileParser {
 			}
 			if (constant instanceof InvokeDynamicInfo) {
 				InvokeDynamicInfo invokeDynamicInfo = (InvokeDynamicInfo) constant;
-				invokeDynamicInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[invokeDynamicInfo.nameAndTypeIndex
-					- 1];
+				invokeDynamicInfo.nameAndTypeInfo = (NameAndTypeInfo) constantPool[invokeDynamicInfo.nameAndTypeIndex - 1];
 			}
 			if (constant instanceof MethodHandleInfo) {
 				MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constant;
@@ -281,11 +269,4 @@ public class ClassFileParser {
 		}
 		
 	}
-	
-	public Supplier<String> getSupplier(String s) {
-		return () -> {
-			return s;
-		};
-	}
-	
 }

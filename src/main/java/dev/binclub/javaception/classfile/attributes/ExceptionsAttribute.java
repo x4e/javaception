@@ -6,15 +6,15 @@ import dev.binclub.javaception.classfile.constants.ClassInfo;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Exceptions;
+
 
 public class ExceptionsAttribute extends AttributeInfo {
-	
 	int numberOfExceptions;
 	ClassInfo[] exceptionIndexTable;
 	
-	public ExceptionsAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
-		throws IOException {
-		super("Exceptions");
+	public ExceptionsAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+		super(Attribute_Exceptions);
 		numberOfExceptions = dis.readUnsignedShort();
 		if (numberOfExceptions != 0) {
 			exceptionIndexTable = new ClassInfo[numberOfExceptions];
@@ -23,7 +23,5 @@ public class ExceptionsAttribute extends AttributeInfo {
 				exceptionIndexTable[i] = (ClassInfo) constantPool[index - 1];
 			}
 		}
-		
 	}
-	
 }

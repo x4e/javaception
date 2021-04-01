@@ -5,14 +5,15 @@ import dev.binclub.javaception.classfile.AttributeInfo;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_LineNumberTable;
+
 
 public class LineNumberTableAttribute extends AttributeInfo {
-	
 	int lineNumberTableLength;
 	LineInfo[] lineNumberTable;
 	
-	public LineNumberTableAttribute(int attributeLength, DataInputStream dis) throws IOException {
-		super("LineNumberTable");
+	public LineNumberTableAttribute(DataInputStream dis) throws IOException {
+		super(Attribute_LineNumberTable);
 		lineNumberTableLength = dis.readUnsignedShort();
 		if (lineNumberTableLength != 0) {
 			lineNumberTable = new LineInfo[lineNumberTableLength];
@@ -34,5 +35,4 @@ public class LineNumberTableAttribute extends AttributeInfo {
 			this.lineNumber = lineNumber;
 		}
 	}
-	
 }

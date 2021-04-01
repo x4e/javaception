@@ -1,6 +1,4 @@
-package dev.binclub.javaception.classfile.attributes;
-
-import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
+package dev.binclub.javaception.classfile.instructions;
 
 public class LookupSwitchInstruction extends SimpleInstruction {
 	

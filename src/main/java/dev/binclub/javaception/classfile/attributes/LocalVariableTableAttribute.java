@@ -5,14 +5,15 @@ import dev.binclub.javaception.classfile.AttributeInfo;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_LocalVariableTable;
+
 
 public class LocalVariableTableAttribute extends AttributeInfo {
 	int localVariableTableLength;
 	LocalVariableTable[] localVariableTable;
 	
-	public LocalVariableTableAttribute(int attributeLength, DataInputStream dis)
-		throws IOException {
-		super("LocalVariableTable");
+	public LocalVariableTableAttribute(DataInputStream dis) throws IOException {
+		super(Attribute_LocalVariableTable);
 		localVariableTableLength = dis.readUnsignedShort();
 		if (localVariableTableLength != 0) {
 			localVariableTable = new LocalVariableTable[localVariableTableLength];
@@ -37,6 +38,5 @@ public class LocalVariableTableAttribute extends AttributeInfo {
 			this.descriptorIndex = descriptorIndex;
 			this.index = index;
 		}
-		
 	}
 }

@@ -9,28 +9,25 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Code;
+
 public class CodeAttribute extends AttributeInfo {
-	
 	int maxStack;
 	int maxLocals;
-	int codeLength;
 	List<SimpleInstruction> instructions;
-	int exceptionTableLength;
 	ExceptionData[] exceptions;
-	int attributesCount;
-	AttributeInfo[] attributes;
+	List<AttributeInfo> attributes;
 	
-	public CodeAttribute(int attributeLength, DataInputStream dis, Object[] constantPool)
-		throws IOException {
-		super("Code");
+	public CodeAttribute(DataInputStream dis, Object[] constantPool) throws IOException {
+		super(Attribute_Code);
 		maxStack = dis.readUnsignedShort();
 		maxLocals = dis.readUnsignedShort();
-		codeLength = dis.readInt();
+		int codeLength = dis.readInt();
 		int[] code = new int[codeLength];
 		for (int i = 0; i < codeLength; i++) {
 			code[i] = dis.readUnsignedByte();
 		}
-		exceptionTableLength = dis.readUnsignedShort();
+		int exceptionTableLength = dis.readUnsignedShort();
 		exceptions = new ExceptionData[exceptionTableLength];
 		for (int i = 0; i < exceptionTableLength; i++) {
 			int startPc = dis.readUnsignedShort();
@@ -39,11 +36,7 @@ public class CodeAttribute extends AttributeInfo {
 			int catchType = dis.readUnsignedShort();
 			exceptions[i] = new ExceptionData(startPc, endPc, handlerPc, catchType);
 		}
-		attributesCount = dis.readUnsignedShort();
-		attributes = new AttributeInfo[attributesCount];
-		for (int i = 0; i < attributesCount; i++) {
-			attributes[i] = ClassFileParser.readAttribute(dis, constantPool);
-		}
+		attributes = ClassFileParser.readAttributes(dis, constantPool, 3);
 		instructions = InstructionParser.parseCode(code, constantPool);
 	}
 	
@@ -58,7 +51,6 @@ public class CodeAttribute extends AttributeInfo {
 	public List<SimpleInstruction> getInstructions() {
 		return instructions;
 	}
-	
 	
 	private static class ExceptionData {
 		int startPc;

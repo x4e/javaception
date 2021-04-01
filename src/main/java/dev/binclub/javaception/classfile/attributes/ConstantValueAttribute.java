@@ -5,17 +5,14 @@ import dev.binclub.javaception.classfile.AttributeInfo;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_ConstantValue;
+
 
 public class ConstantValueAttribute extends AttributeInfo {
+	Object constantValue;
 	
-	int constantValueIndex;
-	
-	public ConstantValueAttribute(String name, int attributeLength, DataInputStream dis) throws IOException {
-		super(name);
-		constantValueIndex = dis.readUnsignedShort();
-	}
-	
-	public Object getConst(Object[] cp) {
-		return cp[constantValueIndex - 1];
+	public ConstantValueAttribute(DataInputStream dis, Object[] cp) throws IOException {
+		super(Attribute_ConstantValue);
+		constantValue = cp[dis.readUnsignedShort() - 1];
 	}
 }
