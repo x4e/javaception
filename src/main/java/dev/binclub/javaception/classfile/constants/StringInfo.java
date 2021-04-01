@@ -8,9 +8,11 @@ public class StringInfo {
 		this.stringIndex = stringIndex;
 	}
 	
-	public Object resolve(Object[] cp) {
-		UtfInfo utf = (UtfInfo) cp[stringIndex - 1];
-		if (utf != null) inner = utf.get();
-		return this;
+	public String resolve(Object[] cp) {
+		if (inner == null) {
+			UtfInfo utf = (UtfInfo) cp[stringIndex - 1];
+			if (utf != null) inner = utf.get();
+		}
+		return inner;
 	}
 }

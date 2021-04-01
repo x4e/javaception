@@ -1,7 +1,7 @@
 package dev.binclub.javaception.runtime;
 
 import dev.binclub.javaception.classfile.MethodInfo;
-import dev.binclub.javaception.classfile.attributes.CodeAttribute;
+import dev.binclub.javaception.classfile.CodeAttribute;
 import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorIAdd;
@@ -28,7 +28,7 @@ public class ExecutionEngine {
 	
 	// invokes method expecting a return obj to but put onto the caller stack
 	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) throws Throwable {
-		CodeAttribute code = method.getCodeAttribute();
+		CodeAttribute code = method.code;
 		MethodContext methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
 		int index = 0;
 		// reference to self

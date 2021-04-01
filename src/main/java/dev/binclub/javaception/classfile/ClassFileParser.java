@@ -1,15 +1,9 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.attributes.*;
 import dev.binclub.javaception.classfile.constants.*;
 import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
-
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 import static dev.binclub.javaception.utils.ByteUtils.*;
@@ -26,8 +20,6 @@ public class ClassFileParser {
 	private int methodOffset;
 	private int attributesOffset;
 	
-	private int _attrib_out_offset;
-	
 	public final Object[] constantPool;
 	public final int constantPoolCount;
 	public final int majorVersion;
@@ -39,7 +31,9 @@ public class ClassFileParser {
 	
 	public final FieldInfo[] fields;
 	public final MethodInfo[] methods;
-	public final List<AttributeInfo> attributes;
+	
+	public String sourceFile;
+	public BootstrapMethod[] bootstrapMethods;
 	
 	public ClassFileParser(byte[] data, InstanceOop loader) throws Throwable {
 		this(data, 0, loader);
@@ -91,9 +85,9 @@ public class ClassFileParser {
 			String name = ((UtfInfo) constantPool[nameIndex - 1]).get();
 			int descriptorIndex = readUnsignedShort(data, methodOffset + 4);
 			String descriptor = ((UtfInfo) constantPool[descriptorIndex - 1]).get();
-			List<AttributeInfo> attributes = readAttributes(methodOffset + 6, constantPool, 1);
-			methodOffset = _attrib_out_offset;
-			fields[i] = new FieldInfo(access, name, descriptor, attributes);
+			var field = new FieldInfo(access, name, descriptor);
+			methodOffset = readFieldAttributes(methodOffset + 6, constantPool, field);
+			fields[i] = field;
 		}
 		
 		int methodsCount = readUnsignedShort(data, methodOffset);
@@ -105,137 +99,94 @@ public class ClassFileParser {
 			String name = ((UtfInfo) constantPool[nameIndex - 1]).get();
 			int descriptorIndex = readUnsignedShort(data, attributesOffset + 4);
 			String descriptor = ((UtfInfo) constantPool[descriptorIndex - 1]).get();
-			List<AttributeInfo> attributes = readAttributes(attributesOffset + 6, constantPool, 2);
-			attributesOffset = _attrib_out_offset;
-			methods[i] = new MethodInfo(access, name, descriptor, attributes);
+			var methodInfo = new MethodInfo(access, name, descriptor);
+			attributesOffset = readMethodAttributes(attributesOffset + 6, constantPool, methodInfo);
+			methods[i] = methodInfo;
 		}
 		
-		attributes = readAttributes(attributesOffset, constantPool, 0);
+		readClassAttributes(attributesOffset, constantPool);
 	}
 	
-	/**
-	 * @param source 0 = class, 1 = field, 2 = method, 3 = code
-	 */
-	public List<AttributeInfo> readAttributes(int offset, Object[] constantPool, int source) throws IOException {
+	public int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {
 		int attributesCount = readUnsignedShort(data, offset);
 		offset += 2;
-		ArrayList<AttributeInfo> attributes = new ArrayList<>(attributesCount);
-		for (int _attribIndex = 0; _attribIndex < attributesCount; _attribIndex++) {
+		while (attributesCount-- > 0) {
 			int attributeNameIndex = readUnsignedShort(data, offset);
 			int attributeLength = readInt(data, offset + 2);
 			offset += 6;
 			int attributeStart = offset;
+			
+			String name = ((UtfInfo) constantPool[attributeNameIndex - 1]).get();
+			switch (name) {
+			case Attribute_ConstantValue -> {
+				var constantValue = constantPool[readUnsignedShort(data, offset) - 1];
+				if (constantValue instanceof StringInfo) {
+					constantValue = ((StringInfo) constantValue).resolve(constantPool);
+				}
+				field.constantValue = constantValue;
+			}}
+			
+			offset = attributeStart + attributeLength;
+		}
+		return offset;
+	}
+	
+	public int readMethodAttributes(int offset, Object[] constantPool, MethodInfo method) {
+		int attributesCount = readUnsignedShort(data, offset);
+		offset += 2;
+		while (attributesCount-- > 0) {
+			int attributeNameIndex = readUnsignedShort(data, offset);
+			int attributeLength = readInt(data, offset + 2);
+			offset += 6;
+			int attributeStart = offset;
+			
 			String name = ((UtfInfo) constantPool[attributeNameIndex - 1]).get();
 			switch (name) {
 			case Attribute_Code -> {
-				if (source == 2) {
-					attributes.add(new CodeAttribute(this, data, offset, constantPool));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_StackMapTable -> {
-				if (source == 3) {
-					// TODO:
-					//attributes.add(new StackMapTableAttribute(attributeLength, dis));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_Exceptions -> {
-				if (source == 2) {
-					int numberOfExceptions = readUnsignedShort(data, offset);
-					offset += 2;
-					ClassInfo[] exceptionsTable = new ClassInfo[numberOfExceptions];
-					for (int i = 0; i < numberOfExceptions; i++) {
-						int index = readUnsignedShort(data, offset);
-						offset += 2;
-						exceptionsTable[i] = (ClassInfo) constantPool[index - 1];
-					}
-					attributes.add(new ExceptionsAttribute(exceptionsTable));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_LineNumberTable -> {
-				if (source == 3) {
-					int lineNumberTableLength = readUnsignedShort(data, offset);
-					offset += 2;
-					var lineNumberTable = new LineNumberTableAttribute.LineInfo[lineNumberTableLength];
-					for (int i = 0; i < lineNumberTableLength; i++) {
-						int startPc = readUnsignedShort(data, offset);
-						int lineNumber = readUnsignedShort(data, offset + 2);
-						offset += 4;
-						lineNumberTable[i] = new LineNumberTableAttribute.LineInfo(startPc, lineNumber);
-					}
-					attributes.add(new LineNumberTableAttribute(lineNumberTable));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_LocalVariableTable -> {
-				if (source == 3) {
-					int localVariableTableLength = readUnsignedShort(data, offset);
-					offset += 2;
-					var localVariableTable = new LocalVariableTableAttribute.LocalVariableTable[localVariableTableLength];
-					for (int i = 0; i < localVariableTableLength; i++) {
-						int startPc = readUnsignedShort(data, offset);
-						int length = readUnsignedShort(data, offset);
-						int nameIndex = readUnsignedShort(data, offset);
-						int descriptorIndex = readUnsignedShort(data, offset);
-						int index = readUnsignedShort(data, offset);
-						offset += 10;
-						localVariableTable[i] = new LocalVariableTableAttribute.LocalVariableTable(startPc, length, nameIndex, descriptorIndex, index);
-					}
-					attributes.add(new LocalVariableTableAttribute(localVariableTable));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_SourceFile -> {
-				if (source == 0) {
-					var sourceFile = ((UtfInfo) constantPool[readUnsignedShort(data, offset) - 1]).get();
-					attributes.add(new SourceFileAttribute(sourceFile));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_BootstrapMethods -> {
-				if (source == 0) {
-					int numBootstrapMethods = readUnsignedShort(data, offset);
-					offset += 2;
-					var bootstrapMethods = new BootstrapMethodsAttribute.BootstrapMethod[numBootstrapMethods];
-					for (int i = 0; i < numBootstrapMethods; i++) {
-						int bootstrapMethodRef = readUnsignedShort(data, offset);
-						MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constantPool[bootstrapMethodRef - 1];
-						int numBootstrapArguments = readUnsignedShort(data, offset + 2);
-						offset += 4;
-						Object[] bootstrapArguments = new Object[numBootstrapArguments];
-						for (int j = 0; j < numBootstrapArguments; j++) {
-							int index = readUnsignedShort(data, offset);
-							offset += 2;
-							bootstrapArguments[j] = constantPool[index - 1];
-						}
-						bootstrapMethods[i] = new BootstrapMethodsAttribute.BootstrapMethod(methodHandleInfo, bootstrapArguments);
-					}
-					attributes.add(new BootstrapMethodsAttribute(bootstrapMethods));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			case Attribute_ConstantValue -> {
-				if (source == 1) {
-					var constantValue = constantPool[readUnsignedShort(data, offset) - 1];
-					attributes.add(new ConstantValueAttribute(constantValue));
-				}
-				offset = attributeStart + attributeLength;
-				continue;
-			}
-			}
+				method.code = new CodeAttribute(this, data, offset, constantPool);
+			}}
+			
 			offset = attributeStart + attributeLength;
 		}
-		_attrib_out_offset = offset;
-		return attributes;
+		return offset;
+	}
+	
+	public int readClassAttributes(int offset, Object[] constantPool) {
+		int attributesCount = readUnsignedShort(data, offset);
+		offset += 2;
+		while (attributesCount-- > 0) {
+			int attributeNameIndex = readUnsignedShort(data, offset);
+			int attributeLength = readInt(data, offset + 2);
+			offset += 6;
+			int attributeStart = offset;
+			
+			String name = ((UtfInfo) constantPool[attributeNameIndex - 1]).get();
+			switch (name) {
+			case Attribute_SourceFile -> {
+				sourceFile = ((UtfInfo) constantPool[readUnsignedShort(data, offset) - 1]).get();
+			}
+			case Attribute_BootstrapMethods -> {
+				int numBootstrapMethods = readUnsignedShort(data, offset);
+				offset += 2;
+				bootstrapMethods = new BootstrapMethod[numBootstrapMethods];
+				for (int i = 0; i < numBootstrapMethods; i++) {
+					int bootstrapMethodRef = readUnsignedShort(data, offset);
+					MethodHandleInfo methodHandleInfo = (MethodHandleInfo) constantPool[bootstrapMethodRef - 1];
+					int numBootstrapArguments = readUnsignedShort(data, offset + 2);
+					offset += 4;
+					Object[] bootstrapArguments = new Object[numBootstrapArguments];
+					for (int j = 0; j < numBootstrapArguments; j++) {
+						int index = readUnsignedShort(data, offset);
+						offset += 2;
+						bootstrapArguments[j] = constantPool[index - 1];
+					}
+					bootstrapMethods[i] = new BootstrapMethod(methodHandleInfo, bootstrapArguments);
+				}
+			}}
+			
+			offset = attributeStart + attributeLength;
+		}
+		return offset;
 	}
 	
 	private int parseConstantPool(int offset) {
@@ -351,5 +302,15 @@ public class ClassFileParser {
 		}
 		
 		return offset;
+	}
+	
+	public static class BootstrapMethod {
+		MethodHandleInfo bootstrapMethodRef;
+		Object[] bootstrapArguments;
+		
+		public BootstrapMethod(MethodHandleInfo bootstrapMethodRef, Object[] bootstrapArguments) {
+			this.bootstrapMethodRef = bootstrapMethodRef;
+			this.bootstrapArguments = bootstrapArguments;
+		}
 	}
 }
