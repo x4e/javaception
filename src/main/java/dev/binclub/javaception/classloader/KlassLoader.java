@@ -3,7 +3,6 @@ package dev.binclub.javaception.classloader;
 import dev.binclub.javaception.klass.ArrayKlass;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
-import dev.binclub.javaception.runtime.SystemDictionary;
 import dev.binclub.javaception.type.ArrayType;
 import dev.binclub.javaception.type.ClassType;
 
@@ -14,7 +13,6 @@ import java.util.Map;
  * Used to lookup classes, typically from a file system
  */
 public class KlassLoader {
-	private static final Map<String, Klass> bootstrapClasses = new HashMap<>();
 	/**
 	 * Map of initiating classloader to created classes
 	 */
@@ -22,13 +20,6 @@ public class KlassLoader {
 	
 	private static Map<String, Klass> getCache(InstanceOop classLoader) {
 		return classCache.computeIfAbsent(classLoader, k -> new HashMap<>());
-	}
-	
-	static {
-		bootstrapClasses.put(
-			"java/lang/Object",
-			new Klass(null, null, "java/lang/Object", null)
-		);
 	}
 	
 	/**
@@ -40,7 +31,7 @@ public class KlassLoader {
 	 * @return A class representing this arrayType
 	 * @throws ClassNotFoundException The array could not be created because the inner class was not found
 	 */
-	public static Klass createArrayClass(Klass referencedBy, InstanceOop classLoader, ArrayType arrayType) throws ClassNotFoundException {
+	public static Klass createArrayClass(Klass referencedBy, InstanceOop classLoader, ArrayType arrayType) {
 		String name = arrayType.name;
 		
 		Map<String, Klass> cache = getCache(classLoader);
@@ -53,8 +44,7 @@ public class KlassLoader {
 		if (arrayType.inner instanceof ClassType) {
 			Klass inner = SystemDictionary.findReferencedClass(referencedBy, (ClassType) arrayType.inner);
 			out = new ArrayKlass(classLoader, null, name, arrayType.dimensions, inner);
-		}
-		else {
+		} else {
 			// TODO: primitive array support
 			throw new UnsupportedOperationException();
 		}
@@ -68,13 +58,12 @@ public class KlassLoader {
 			// loading of the class denoted by className
 			
 			// TODO: bootstrap class loading logic
-			Klass out = bootstrapClasses.get(name);
+			Klass out = BootstrapKlassLoader.loadClass(name);
 			if (out != null) {
 				return out;
 			}
 			throw new ClassNotFoundException();
-		}
-		else {
+		} else {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (classLoader) {
 				// If referencedBy was defined by a user-defined class loader, then that same user-defined class loader

@@ -1,12 +1,6 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.AttributeInfo;
-import dev.binclub.javaception.classfile.ClassFileParser;
-import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
 import dev.binclub.javaception.classfile.constants.UtfInfo;
-import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
-
-import java.util.List;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 import static dev.binclub.javaception.utils.ByteUtils.*;
@@ -17,13 +11,12 @@ public class CodeAttribute extends AttributeInfo {
 	byte[] code;
 	int codeOffset;
 	int codeEnd;
-	List<SimpleInstruction> instructions;
 	ExceptionData[] exceptions;
 	
 	public LineInfo[] lineNumberTable;
 	public LocalVariableTable[] localVariableTable;
 	
-	public CodeAttribute(ClassFileParser parser, byte[] data, int offset, Object[] constantPool) {
+	public CodeAttribute(byte[] data, int offset, Object[] constantPool) {
 		super(Attribute_Code);
 		maxStack = readUnsignedShort(data, offset);
 		maxLocals = readUnsignedShort(data, offset + 2);
@@ -53,10 +46,6 @@ public class CodeAttribute extends AttributeInfo {
 		return maxLocals;
 	}
 	
-	public List<SimpleInstruction> getInstructions() {
-		return instructions;
-	}
-	
 	private static class ExceptionData {
 		int startPc;
 		int endPc;
@@ -73,7 +62,7 @@ public class CodeAttribute extends AttributeInfo {
 	}
 	
 	
-	public int readCodeAttributes(byte[] data, int offset, Object[] constantPool) {
+	private int readCodeAttributes(byte[] data, int offset, Object[] constantPool) {
 		int attributesCount = readUnsignedShort(data, offset);
 		offset += 2;
 		while (attributesCount-- > 0) {
@@ -116,7 +105,7 @@ public class CodeAttribute extends AttributeInfo {
 	}
 	
 	public static class LineInfo {
-		int startPc, lineNumber;
+		public final int startPc, lineNumber;
 		
 		public LineInfo(int startPc, int lineNumber) {
 			super();
@@ -126,7 +115,7 @@ public class CodeAttribute extends AttributeInfo {
 	}
 	
 	public static class LocalVariableTable {
-		int startPc, length, nameIndex, descriptorIndex, index;
+		public final int startPc, length, nameIndex, descriptorIndex, index;
 		
 		public LocalVariableTable(int startPc, int length, int nameIndex, int descriptorIndex, int index) {
 			this.startPc = startPc;

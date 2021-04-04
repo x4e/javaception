@@ -5,8 +5,8 @@ import java.io.UTFDataFormatException;
 import static dev.binclub.javaception.utils.ByteUtils.readUtf;
 
 public class UtfInfo {
-	private byte[] data;
-	private int offset;
+	public byte[] data;
+	public int offset;
 	private String inner;
 	
 	public UtfInfo(byte[] data, int offset) {

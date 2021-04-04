@@ -2,32 +2,13 @@ package dev.binclub.javaception.runtime;
 
 import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.CodeAttribute;
-import dev.binclub.javaception.classfile.instructions.SimpleInstruction;
 import dev.binclub.javaception.oop.InstanceOop;
-import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorIAdd;
-import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorILoad;
-import dev.binclub.javaception.runtime.InstructionExecutors.ExecutorXReturn;
 
 import java.lang.reflect.Modifier;
 
 public class ExecutionEngine {
-	
-	public static InstructionExecutor[] instructionExecutors = new InstructionExecutor[256];
-	
-	static {
-		setRange(0x1a, 0x1d, new ExecutorILoad());
-		ExecutionEngine.instructionExecutors[0x60] = new ExecutorIAdd();
-		setRange(0xac, 0xb0, new ExecutorXReturn());
-	}
-	
-	private static void setRange(int lowerBound, int upperBound, InstructionExecutor executor) {
-		for (int i = lowerBound; i <= upperBound; i++) {
-			ExecutionEngine.instructionExecutors[i] = executor;
-		}
-	}
-	
 	// invokes method expecting a return obj to but put onto the caller stack
-	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) throws Throwable {
+	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) {
 		CodeAttribute code = method.code;
 		MethodContext methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
 		int index = 0;
@@ -46,14 +27,14 @@ public class ExecutionEngine {
 				++index;
 			}
 		}
-		SimpleInstruction instruction = code.getInstructions().get(0);
+		/*SimpleInstruction instruction = code.getInstructions().get(0);
 		InstructionExecutor executor = instructionExecutors[instruction.getOpcode()];
 		if (executor == null) {
 			throw new RuntimeException("Unsupported instruction " + String.format("0x%2X", instruction.getOpcode()));
 		}
 		while ((instruction = executor.execute(methodContext, instruction)) != null) {
 			executor = instructionExecutors[instruction.getOpcode()];
-		}
+		}*/
 		return methodContext.pop();
 		
 	}

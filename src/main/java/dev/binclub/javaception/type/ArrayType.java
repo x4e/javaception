@@ -14,12 +14,7 @@ public class ArrayType extends ClassType {
 	}
 	
 	private static String toDescriptor(int dimensions, Type inner) {
-		StringBuilder sb = new StringBuilder(dimensions + 5);
-		for (int i = 0; i < dimensions; i++) {
-			sb.append('[');
-		}
-		sb.append(inner.toString());
-		return sb.toString();
+		return "[".repeat(Math.max(0, dimensions)) + inner.toString();
 	}
 	
 	@Override

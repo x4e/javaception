@@ -5,6 +5,7 @@ import java.util.Objects;
 public class ClassType extends Type {
 	/**
 	 * Internal (/) name. Does *not* include L; surrounding.
+	 * If this is an {@link ArrayType} then it will include [ prefixes to represent the array dimensions.
 	 */
 	public final String name;
 	

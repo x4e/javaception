@@ -5,20 +5,33 @@ import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 import static dev.binclub.javaception.utils.ByteUtils.*;
 import static dev.binclub.javaception.utils.ByteUtils.readUnsignedShort;
 
 public class ClassFileParser {
+	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
+		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
+	}
+	
+	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
+		return new ClassFileParser(buffer.array(), loader).toKlass();
+	}
+	
+	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
+		return new ClassFileParser(data, loader).toKlass();
+	}
+	
+	
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
 	
 	private final byte[] data;
-	private final int startOffset;
-	private final int accessOffset;
-	private int fieldsOffset;
-	private int methodOffset;
-	private int attributesOffset;
+	private final InstanceOop loader;
 	
 	public final Object[] constantPool;
 	public final int constantPoolCount;
@@ -35,13 +48,25 @@ public class ClassFileParser {
 	public String sourceFile;
 	public BootstrapMethod[] bootstrapMethods;
 	
-	public ClassFileParser(byte[] data, InstanceOop loader) throws Throwable {
+	public Klass toKlass() {
+		return new Klass(
+			loader,
+			constantPool,
+			className,
+			superClass,
+			interfaces,
+			fields,
+			methods
+		);
+	}
+	
+	private ClassFileParser(byte[] data, InstanceOop loader) throws ClassNotFoundException {
 		this(data, 0, loader);
 	}
 	
-	public ClassFileParser(byte[] data, int startOffset, InstanceOop loader) throws Throwable {
+	private ClassFileParser(byte[] data, int startOffset, InstanceOop loader) throws ClassNotFoundException {
 		this.data = data;
-		this.startOffset = startOffset;
+		this.loader = loader;
 		
 		if (readInt(data, startOffset) != CLASS_MAGIC) {
 			throw new ClassFormatError();
@@ -55,7 +80,7 @@ public class ClassFileParser {
 		
 		constantPoolCount = readUnsignedShort(data, startOffset + 8);
 		constantPool = new Object[constantPoolCount - 1];
-		accessOffset = parseConstantPool(startOffset + 10);
+		int accessOffset = parseConstantPool(startOffset + 10);
 		
 		access = readUnsignedShort(data, accessOffset);
 		
@@ -66,7 +91,7 @@ public class ClassFileParser {
 		
 		int interfacesCount = readUnsignedShort(data, accessOffset + 6);
 		interfaces = new Klass[interfacesCount];
-		fieldsOffset = accessOffset + 8;
+		int fieldsOffset = accessOffset + 8;
 		for (int i = 0; i < interfacesCount; i++) {
 			interfaces[i] = KlassLoader.loadClass(loader, (String) constantPool[readUnsignedShort(data, fieldsOffset) - 1]);
 			fieldsOffset += 2;
@@ -78,7 +103,7 @@ public class ClassFileParser {
 		
 		int fieldsCount = readUnsignedShort(data, fieldsOffset);
 		fields = new FieldInfo[fieldsCount];
-		methodOffset = fieldsOffset + 2;
+		int methodOffset = fieldsOffset + 2;
 		for (int i = 0; i < fieldsCount; i++) {
 			int access = readUnsignedShort(data, methodOffset);
 			int nameIndex = readUnsignedShort(data, methodOffset + 2);
@@ -92,7 +117,7 @@ public class ClassFileParser {
 		
 		int methodsCount = readUnsignedShort(data, methodOffset);
 		methods = new MethodInfo[methodsCount];
-		attributesOffset = methodOffset + 2;
+		int attributesOffset = methodOffset + 2;
 		for (int i = 0; i < methodsCount; i++) {
 			int access = readUnsignedShort(data, attributesOffset);
 			int nameIndex = readUnsignedShort(data, attributesOffset + 2);
@@ -107,7 +132,7 @@ public class ClassFileParser {
 		readClassAttributes(attributesOffset, constantPool);
 	}
 	
-	public int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {
+	private int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {
 		int attributesCount = readUnsignedShort(data, offset);
 		offset += 2;
 		while (attributesCount-- > 0) {
@@ -118,20 +143,15 @@ public class ClassFileParser {
 			
 			String name = ((UtfInfo) constantPool[attributeNameIndex - 1]).get();
 			switch (name) {
-			case Attribute_ConstantValue -> {
-				var constantValue = constantPool[readUnsignedShort(data, offset) - 1];
-				if (constantValue instanceof StringInfo) {
-					constantValue = ((StringInfo) constantValue).resolve(constantPool);
-				}
-				field.constantValue = constantValue;
-			}}
+			case Attribute_ConstantValue -> field.constantValue = constantPool[readUnsignedShort(data, offset) - 1];
+			}
 			
 			offset = attributeStart + attributeLength;
 		}
 		return offset;
 	}
 	
-	public int readMethodAttributes(int offset, Object[] constantPool, MethodInfo method) {
+	private int readMethodAttributes(int offset, Object[] constantPool, MethodInfo method) {
 		int attributesCount = readUnsignedShort(data, offset);
 		offset += 2;
 		while (attributesCount-- > 0) {
@@ -143,7 +163,7 @@ public class ClassFileParser {
 			String name = ((UtfInfo) constantPool[attributeNameIndex - 1]).get();
 			switch (name) {
 			case Attribute_Code -> {
-				method.code = new CodeAttribute(this, data, offset, constantPool);
+				method.code = new CodeAttribute(data, offset, constantPool);
 			}}
 			
 			offset = attributeStart + attributeLength;
@@ -151,7 +171,7 @@ public class ClassFileParser {
 		return offset;
 	}
 	
-	public int readClassAttributes(int offset, Object[] constantPool) {
+	private int readClassAttributes(int offset, Object[] constantPool) {
 		int attributesCount = readUnsignedShort(data, offset);
 		offset += 2;
 		while (attributesCount-- > 0) {

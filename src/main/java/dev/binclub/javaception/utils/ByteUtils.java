@@ -95,43 +95,42 @@ public class ByteUtils {
 		while (count < utflen) {
 			c = (int) data[offset + count] & 0xff;
 			switch (c >> 4) {
-			case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-				/* 0xxxxxxx*/
+			/* 0xxxxxxx*/
+			case 0, 1, 2, 3, 4, 5, 6, 7 -> {
 				count++;
-				chararr[chararr_count++]=(char)c;
-				break;
-			case 12: case 13:
-				/* 110x xxxx   10xx xxxx*/
+				chararr[chararr_count++] = (char) c;
+			}
+			/* 110x xxxx   10xx xxxx*/
+			case 12, 13 -> {
 				count += 2;
 				if (count > utflen)
 					throw new UTFDataFormatException(
 						"malformed input: partial character at end");
-				char2 = data[offset + count-1];
+				char2 = data[offset + count - 1];
 				if ((char2 & 0xC0) != 0x80)
 					throw new UTFDataFormatException(
 						"malformed input around byte " + count);
-				chararr[chararr_count++]=(char)(((c & 0x1F) << 6) |
+				chararr[chararr_count++] = (char) (((c & 0x1F) << 6) |
 					(char2 & 0x3F));
-				break;
-			case 14:
-				/* 1110 xxxx  10xx xxxx  10xx xxxx */
+			}
+			/* 1110 xxxx  10xx xxxx  10xx xxxx */
+			case 14 -> {
 				count += 3;
 				if (count > utflen)
 					throw new UTFDataFormatException(
 						"malformed input: partial character at end");
-				char2 = data[offset + count-2];
-				char3 = data[offset + count-1];
+				char2 = data[offset + count - 2];
+				char3 = data[offset + count - 1];
 				if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
 					throw new UTFDataFormatException(
-						"malformed input around byte " + (count-1));
-				chararr[chararr_count++]=(char)(((c     & 0x0F) << 12) |
-					((char2 & 0x3F) << 6)  |
+						"malformed input around byte " + (count - 1));
+				chararr[chararr_count++] = (char) (((c & 0x0F) << 12) |
+					((char2 & 0x3F) << 6) |
 					((char3 & 0x3F) << 0));
-				break;
-			default:
-				/* 10xx xxxx,  1111 xxxx */
-				throw new UTFDataFormatException(
-					"malformed input around byte " + count);
+			}
+			/* 10xx xxxx,  1111 xxxx */
+			default -> throw new UTFDataFormatException(
+				"malformed input around byte " + count);
 			}
 		}
 		// The number of chars produced may be less than utflen

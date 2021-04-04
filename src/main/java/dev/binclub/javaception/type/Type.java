@@ -46,7 +46,7 @@ public abstract class Type {
 	 * @return array of arguments
 	 * @throws IllegalArgumentException if the descriptor is invalid
 	 */
-	public static Type[] parseMethodArguments(String descriptor) {
+	public static Type[] parseMethodDescriptor(String descriptor) {
 		try {
 			char[] chars = descriptor.toCharArray();
 			if (chars[0] != '(') throw new IllegalArgumentException("Method descriptor should start with '('");
@@ -57,11 +57,12 @@ public abstract class Type {
 				out.add(parseSingleType(chars, offset, offsetOut));
 				offset = offsetOut[0];
 			}
+			out.add(parseSingleType(chars, offset + 1, offsetOut));
 			return out.toArray(new Type[0]);
 		}
 		catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
-				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
+				ex = new IllegalArgumentException("Invalid descriptor '%s'".formatted(descriptor), ex);
 			}
 			throw ex;
 		}
@@ -75,7 +76,7 @@ public abstract class Type {
 		}
 		catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
-				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
+				ex = new IllegalArgumentException("Invalid descriptor '%s'".formatted(descriptor), ex);
 			}
 			throw ex;
 		}
@@ -123,7 +124,7 @@ public abstract class Type {
 			case 'D':
 				return PrimitiveType.DOUBLE;
 			}
-			throw new IllegalArgumentException("Unknown descriptor identifier: " + first);
+			throw new IllegalArgumentException("Unknown descriptor identifier: %s (0x%s)".formatted(first, Integer.toHexString(first)));
 		}
 		finally {
 			offsetOut[0] = offset;
