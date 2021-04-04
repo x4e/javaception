@@ -62,7 +62,7 @@ public class KlassLoader {
 			if (out != null) {
 				return out;
 			}
-			throw new ClassNotFoundException();
+			throw new ClassNotFoundException(name);
 		} else {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (classLoader) {

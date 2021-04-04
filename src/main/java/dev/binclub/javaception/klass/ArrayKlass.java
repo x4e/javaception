@@ -19,7 +19,7 @@ public class ArrayKlass extends Klass {
 		int dimensions,
 		Klass inner
 	) {
-		super(classLoader, runtimeConstantPool, name, SystemDictionary.java_lang_Object(), new FieldInfo[0], new MethodInfo[0]);
+		super(classLoader, runtimeConstantPool, name, SystemDictionary.java_lang_Object(), new Klass[0], new FieldInfo[0], new MethodInfo[0]);
 		this.dimensions = dimensions;
 		this.inner = inner;
 	}

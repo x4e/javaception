@@ -28,4 +28,9 @@ public class UtfInfo {
 		}
 		return inner;
 	}
+	
+	@Override
+	public String toString() {
+		return get();
+	}
 }

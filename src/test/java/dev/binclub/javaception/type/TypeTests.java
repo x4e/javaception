@@ -42,11 +42,11 @@ public class TypeTests {
 	public void testMethodDescriptors() {
 		assertArrayEquals(
 			Type.parseMethodDescriptor("(Ljava/lang/Object;ZI)V"),
-			new Type[]{new ClassType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT}
+			new Type[]{new ClassType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT, PrimitiveType.VOID}
 		);
 		assertArrayEquals(
 			Type.parseMethodDescriptor("(Ljava/lang/Object;[[[Z)V"),
-			new Type[]{new ClassType("java/lang/Object"), new ArrayType(3, PrimitiveType.BYTE)}
+			new Type[]{new ClassType("java/lang/Object"), new ArrayType(3, PrimitiveType.BYTE), PrimitiveType.VOID}
 		);
 		
 		assertEquals(Type.parseMethodReturnType("()V"), PrimitiveType.VOID);

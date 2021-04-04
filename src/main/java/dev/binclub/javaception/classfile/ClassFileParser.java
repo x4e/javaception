@@ -5,6 +5,7 @@ import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -19,7 +20,9 @@ public class ClassFileParser {
 	}
 	
 	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
-		return new ClassFileParser(buffer.array(), loader).toKlass();
+		byte[] data = new byte[buffer.remaining()];
+		buffer.get(data);
+		return new ClassFileParser(data, loader).toKlass();
 	}
 	
 	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
@@ -33,8 +36,9 @@ public class ClassFileParser {
 	private final byte[] data;
 	private final InstanceOop loader;
 	
+	private int accessOffset;
+	
 	public final Object[] constantPool;
-	public final int constantPoolCount;
 	public final int majorVersion;
 	public final int minorVersion;
 	public final int access;
@@ -78,16 +82,19 @@ public class ClassFileParser {
 			throw new UnsupportedClassVersionError("Unsupported class file version: " + majorVersion + "." + minorVersion);
 		}
 		
-		constantPoolCount = readUnsignedShort(data, startOffset + 8);
-		constantPool = new Object[constantPoolCount - 1];
-		int accessOffset = parseConstantPool(startOffset + 10);
+		constantPool = parseConstantPool(startOffset + 8);
 		
 		access = readUnsignedShort(data, accessOffset);
 		
 		int classNameIndex = readUnsignedShort(data, accessOffset + 2);
 		className = ((ClassInfo) constantPool[classNameIndex - 1]).name;
 		int superClassNameIndex = readUnsignedShort(data, accessOffset + 4);
-		superClass = KlassLoader.loadClass(loader, ((ClassInfo) constantPool[superClassNameIndex - 1]).name);
+		if (superClassNameIndex != 0) {
+			superClass = KlassLoader.loadClass(loader, ((ClassInfo) constantPool[superClassNameIndex - 1]).name);
+		} else {
+			// should only happen if className == java/lang/Object
+			superClass = null;
+		}
 		
 		int interfacesCount = readUnsignedShort(data, accessOffset + 6);
 		interfaces = new Klass[interfacesCount];
@@ -209,9 +216,14 @@ public class ClassFileParser {
 		return offset;
 	}
 	
-	private int parseConstantPool(int offset) {
+	private Object[] parseConstantPool(int offset) {
 		byte[] data = this.data;
-		for (int i = 0; i < constantPoolCount - 1; i++) {
+		
+		int constantPoolCount = readUnsignedShort(data, offset);
+		Object[] constantPool = new Object[constantPoolCount - 1];
+		offset += 2;
+		
+		for (int i = 0; i < constantPoolCount - 1; i += 1) {
 			int tag = readUnsignedByte(data, offset);
 			offset += 1;
 			switch (tag) {
@@ -223,6 +235,7 @@ public class ClassFileParser {
 			case CONSTANT_Double:
 				constantPool[i] = readDouble(data, offset);
 				offset += 8;
+				i += 1;
 				break;
 			case CONSTANT_Float:
 				constantPool[i] = readFloat(data, offset);
@@ -251,6 +264,7 @@ public class ClassFileParser {
 			case CONSTANT_Long:
 				constantPool[i] = readLong(data, offset);
 				offset += 8;
+				i += 1;
 				break;
 			case CONSTANT_MethodHandle:
 				int referenceKind = readUnsignedByte(data, offset);
@@ -321,7 +335,8 @@ public class ClassFileParser {
 			}
 		}
 		
-		return offset;
+		accessOffset = offset;
+		return constantPool;
 	}
 	
 	public static class BootstrapMethod {
