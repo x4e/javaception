@@ -1,13 +1,10 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.ClassFileParser;
-import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.ExecutionEngine;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Objects;
 
@@ -17,25 +14,24 @@ public class ClassFileParserTests {
 	@Test
 	public void testItself() throws Throwable {
 		InputStream stream = ClassFileParser.class.getClassLoader()
-			.getResourceAsStream("dev/binclub/javaception/classfile/ClassFileParser.class");
+			.getResourceAsStream("dev/binclub/javaception/classfile/ClassFileParserTests.class");
 		Objects.requireNonNull(stream);
 		
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		int available;
-		while ((available = stream.available()) != 0) {
-			byte[] bytes = new byte[available];
-			if (stream.read(bytes) == -1) {
-				break;
-			}
-			bos.write(bytes);
-		}
-		
-		Klass klassFile = ClassFileParser.parse(bos.toByteArray(), InstanceOop._null());
+		Klass klassFile = ClassFileParser.parse(stream, InstanceOop._null());
 		for (MethodInfo method : klassFile.methods) {
-			if (method.name.equals("addTest")) {
-				Object result = ExecutionEngine.invokeMethodObj(null, method, 5, 5);
-				assertEquals(result, 10);
+			if (method.name.equals("testField")) {
+				Object result = ExecutionEngine.invokeMethodObj(null, method);
+				assertEquals(result, -5);
+				return;
 			}
 		}
+		throw new IllegalStateException("No method found");
+	}
+	
+	private static int field = -1;
+	private static int field2 = 0;
+	public static int testField() {
+		field2 = 5;
+		return field * field2;
 	}
 }
