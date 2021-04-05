@@ -1,4 +1,4 @@
-package dev.binclub.javaception.type;
+package dev.binclub.javaception.classfile;
 
 import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.classfile.MethodInfo;
