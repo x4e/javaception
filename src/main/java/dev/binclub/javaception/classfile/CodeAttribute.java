@@ -9,7 +9,7 @@ public class CodeAttribute extends AttributeInfo {
 	int maxStack;
 	int maxLocals;
 	byte[] code;
-	int codeOffset;
+	public final int codeOffset;
 	int codeEnd;
 	ExceptionData[] exceptions;
 	
@@ -44,6 +44,10 @@ public class CodeAttribute extends AttributeInfo {
 	
 	public int getMaxLocals() {
 		return maxLocals;
+	}
+	
+	public byte[] getCode() {
+		return this.code;
 	}
 	
 	private static class ExceptionData {

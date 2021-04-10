@@ -12,7 +12,7 @@ public class NameAndTypeInfo {
 	public Object resolve(Object[] cp) {
 		UtfInfo utf = (UtfInfo) cp[nameIndex - 1];
 		if (utf != null) name = utf.get();
-		utf = (UtfInfo) cp[nameIndex - 1];
+		utf = (UtfInfo) cp[descriptorIndex - 1];
 		if (utf != null) description = utf.get();
 		return this;
 	}

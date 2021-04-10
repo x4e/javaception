@@ -33,7 +33,7 @@ public class OpcodeStride {
 		setRange(GOTO_W, JSR_W, 4);
 	}
 	
-	public static int getStrideAmount(int opcode, int offset, int[] instructions) {
+	public static int getStrideAmount(int opcode, int offset, byte[] instructions) {
 		int stride = strideAmount[opcode];
 		
 		if (stride != -1) {
@@ -73,7 +73,7 @@ public class OpcodeStride {
 		return stride;
 	}
 	
-	public static int getInt(int index, int[] instructions) {
+	public static int getInt(int index, byte[] instructions) {
 		int b1 = instructions[index + 1];
 		int b2 = instructions[index + 2];
 		int b3 = instructions[index + 3];

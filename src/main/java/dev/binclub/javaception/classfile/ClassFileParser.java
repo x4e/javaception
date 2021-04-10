@@ -1,43 +1,59 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.constants.*;
+import dev.binclub.javaception.classfile.constants.ClassInfo;
+import dev.binclub.javaception.classfile.constants.DynamicInfo;
+import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
+import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
+import dev.binclub.javaception.classfile.constants.MethodTypeInfo;
+import dev.binclub.javaception.classfile.constants.NameAndTypeInfo;
+import dev.binclub.javaception.classfile.constants.RefInfo;
+import dev.binclub.javaception.classfile.constants.StringInfo;
+import dev.binclub.javaception.classfile.constants.UtfInfo;
 import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static dev.binclub.javaception.classfile.ClassFileConstants.*;
-import static dev.binclub.javaception.utils.ByteUtils.*;
+import static dev.binclub.javaception.classfile.ClassFileConstants.ACC_MODULE;
+import static dev.binclub.javaception.classfile.ClassFileConstants.ACC_STATIC;
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_BootstrapMethods;
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Code;
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_ConstantValue;
+import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_SourceFile;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CLASS_MAGIC;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Class;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Double;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Dynamic;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Fieldref;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Float;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Integer;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_InterfaceMethodref;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_InvokeDynamic;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Long;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_MethodHandle;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_MethodType;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Methodref;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_NameAndType;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_String;
+import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Utf8;
+import static dev.binclub.javaception.classfile.ClassFileConstants.V16;
+import static dev.binclub.javaception.classfile.ClassFileConstants.V1_2;
+import static dev.binclub.javaception.utils.ByteUtils.readDouble;
+import static dev.binclub.javaception.utils.ByteUtils.readFloat;
+import static dev.binclub.javaception.utils.ByteUtils.readInt;
+import static dev.binclub.javaception.utils.ByteUtils.readLong;
+import static dev.binclub.javaception.utils.ByteUtils.readUnsignedByte;
 import static dev.binclub.javaception.utils.ByteUtils.readUnsignedShort;
 
 public class ClassFileParser {
-	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
-		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
-	}
-	
-	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
-		byte[] data = new byte[buffer.remaining()];
-		buffer.get(data);
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
-	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
-	
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
-	
-	private final byte[] data;
-	private final InstanceOop loader;
-	
-	private int accessOffset;
-	
 	public final Object[] constantPool;
 	public final int majorVersion;
 	public final int minorVersion;
@@ -45,24 +61,13 @@ public class ClassFileParser {
 	public final String className;
 	public final Klass superClass;
 	public final Klass[] interfaces;
-	
-	public final FieldInfo[] fields;
 	public final MethodInfo[] methods;
-	
+	private final byte[] data;
+	private final InstanceOop loader;
+	public FieldInfo[] fields;
 	public String sourceFile;
 	public BootstrapMethod[] bootstrapMethods;
-	
-	public Klass toKlass() {
-		return new Klass(
-			loader,
-			constantPool,
-			className,
-			superClass,
-			interfaces,
-			fields,
-			methods
-		);
-	}
+	private int accessOffset;
 	
 	private ClassFileParser(byte[] data, InstanceOop loader) throws ClassNotFoundException {
 		this(data, 0, loader);
@@ -137,6 +142,45 @@ public class ClassFileParser {
 		}
 		
 		readClassAttributes(attributesOffset, constantPool);
+		sortFields();
+	}
+	
+	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
+		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
+	}
+	
+	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
+		byte[] data = new byte[buffer.remaining()];
+		buffer.get(data);
+		return new ClassFileParser(data, loader).toKlass();
+	}
+	
+	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
+		return new ClassFileParser(data, loader).toKlass();
+	}
+	
+	//fields are sorted so non static are first makes indexing easier
+	public void sortFields() {
+		List<FieldInfo> tempFields = new ArrayList<>();
+		Collections.addAll(tempFields, fields);
+		tempFields.sort((f1, f2) -> {
+			boolean f1Static = (f1.access & ACC_STATIC) != 0;
+			boolean f2Static = (f2.access & ACC_STATIC) != 0;
+			return Boolean.compare(f1Static, f2Static);
+		});
+		tempFields.toArray(fields);
+	}
+	
+	public Klass toKlass() {
+		return new Klass(
+			loader,
+			constantPool,
+			className,
+			superClass,
+			interfaces,
+			fields,
+			methods
+		);
 	}
 	
 	private int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {
@@ -171,7 +215,8 @@ public class ClassFileParser {
 			switch (name) {
 			case Attribute_Code -> {
 				method.code = new CodeAttribute(data, offset, constantPool);
-			}}
+			}
+			}
 			
 			offset = attributeStart + attributeLength;
 		}
@@ -209,7 +254,8 @@ public class ClassFileParser {
 					}
 					bootstrapMethods[i] = new BootstrapMethod(methodHandleInfo, bootstrapArguments);
 				}
-			}}
+			}
+			}
 			
 			offset = attributeStart + attributeLength;
 		}
@@ -248,9 +294,10 @@ public class ClassFileParser {
 			case CONSTANT_Fieldref:
 			case CONSTANT_Methodref:
 			case CONSTANT_InterfaceMethodref:
+				RefInfo.RefType type = RefInfo.RefType.values()[tag - CONSTANT_Fieldref];
 				int classIndex = readUnsignedShort(data, offset);
 				int nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex)
+				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex, type)
 					.resolve(constantPool);
 				offset += 4;
 				break;

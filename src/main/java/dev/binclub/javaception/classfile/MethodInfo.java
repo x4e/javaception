@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classfile;
 
+import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.Type;
 
 import java.util.Objects;
@@ -8,19 +9,22 @@ public class MethodInfo {
 	public final int access;
 	public final String name;
 	public final Type[] descriptor;
+	public final String signature;
 	public CodeAttribute code;
+	public Klass owner;
+	private int _hashcode = 0;
 	
 	public MethodInfo(int access, String name, String descriptor) {
-		this(access, name, Type.parseMethodDescriptor(descriptor));
+		this(access, name, Type.parseMethodDescriptor(descriptor), descriptor);
 	}
 	
-	public MethodInfo(int access, String name, Type[] descriptor) {
+	public MethodInfo(int access, String name, Type[] descriptor, String signature) {
 		this.access = access;
 		this.name = name;
 		this.descriptor = descriptor;
+		this.signature = signature;
 	}
 	
-	private int _hashcode = 0;
 	@Override
 	public int hashCode() {
 		int hash = _hashcode;
