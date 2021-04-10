@@ -1,14 +1,6 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classfile.constants.ClassInfo;
-import dev.binclub.javaception.classfile.constants.DynamicInfo;
-import dev.binclub.javaception.classfile.constants.InvokeDynamicInfo;
-import dev.binclub.javaception.classfile.constants.MethodHandleInfo;
-import dev.binclub.javaception.classfile.constants.MethodTypeInfo;
-import dev.binclub.javaception.classfile.constants.NameAndTypeInfo;
-import dev.binclub.javaception.classfile.constants.RefInfo;
-import dev.binclub.javaception.classfile.constants.StringInfo;
-import dev.binclub.javaception.classfile.constants.UtfInfo;
+import dev.binclub.javaception.classfile.constants.*;
 import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
@@ -20,36 +12,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static dev.binclub.javaception.classfile.ClassFileConstants.ACC_MODULE;
-import static dev.binclub.javaception.classfile.ClassFileConstants.ACC_STATIC;
-import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_BootstrapMethods;
-import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_Code;
-import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_ConstantValue;
-import static dev.binclub.javaception.classfile.ClassFileConstants.Attribute_SourceFile;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CLASS_MAGIC;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Class;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Double;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Dynamic;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Fieldref;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Float;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Integer;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_InterfaceMethodref;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_InvokeDynamic;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Long;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_MethodHandle;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_MethodType;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Methodref;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_NameAndType;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_String;
-import static dev.binclub.javaception.classfile.ClassFileConstants.CONSTANT_Utf8;
-import static dev.binclub.javaception.classfile.ClassFileConstants.V16;
-import static dev.binclub.javaception.classfile.ClassFileConstants.V1_2;
-import static dev.binclub.javaception.utils.ByteUtils.readDouble;
-import static dev.binclub.javaception.utils.ByteUtils.readFloat;
-import static dev.binclub.javaception.utils.ByteUtils.readInt;
-import static dev.binclub.javaception.utils.ByteUtils.readLong;
-import static dev.binclub.javaception.utils.ByteUtils.readUnsignedByte;
-import static dev.binclub.javaception.utils.ByteUtils.readUnsignedShort;
+import static dev.binclub.javaception.classfile.ClassFileConstants.*;
+import static dev.binclub.javaception.utils.ByteUtils.*;
 
 public class ClassFileParser {
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
@@ -161,14 +125,14 @@ public class ClassFileParser {
 	
 	//fields are sorted so non static are first makes indexing easier
 	public void sortFields() {
-		List<FieldInfo> tempFields = new ArrayList<>();
+		List<FieldInfo> tempFields = new ArrayList<>(fields.length);
 		Collections.addAll(tempFields, fields);
 		tempFields.sort((f1, f2) -> {
 			boolean f1Static = (f1.access & ACC_STATIC) != 0;
 			boolean f2Static = (f2.access & ACC_STATIC) != 0;
 			return Boolean.compare(f1Static, f2Static);
 		});
-		tempFields.toArray(fields);
+		fields = tempFields.toArray(fields);
 	}
 	
 	public Klass toKlass() {
@@ -215,8 +179,7 @@ public class ClassFileParser {
 			switch (name) {
 			case Attribute_Code -> {
 				method.code = new CodeAttribute(data, offset, constantPool);
-			}
-			}
+			}}
 			
 			offset = attributeStart + attributeLength;
 		}
@@ -254,8 +217,7 @@ public class ClassFileParser {
 					}
 					bootstrapMethods[i] = new BootstrapMethod(methodHandleInfo, bootstrapArguments);
 				}
-			}
-			}
+			}}
 			
 			offset = attributeStart + attributeLength;
 		}

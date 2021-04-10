@@ -75,14 +75,11 @@ public class ExecutionEngine {
 			case SIPUSH:
 				methodContext.push((instructions[currentInstruction + 1] << 8) | instructions[currentInstruction + 2]);
 			case LDC:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case LDC_W:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case LDC2_W:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case ILOAD:
 			case LLOAD:
 			case FLOAD:
@@ -191,10 +188,16 @@ public class ExecutionEngine {
 				val = methodContext.pop();
 				val2 = methodContext.pop();
 				Object val3 = methodContext.pop();
-				methodContext.push(val);
-				methodContext.push(val3);
-				methodContext.push(val2);
-				methodContext.push(val);
+				if (val2 instanceof Double || val2 instanceof Long) {
+					methodContext.push(val);
+					methodContext.push(val2);
+					methodContext.push(val);
+				} else {
+					methodContext.push(val);
+					methodContext.push(val3);
+					methodContext.push(val2);
+					methodContext.push(val);
+				}
 				break;
 			case DUP2:
 				val = methodContext.pop();
@@ -318,19 +321,13 @@ public class ExecutionEngine {
 			case INEG:
 				methodContext.push((~(int) methodContext.pop()) + 1);
 			case FNEG:
-				Float fnum = (Float) methodContext.pop();
-				int fbits = Float.floatToIntBits(fnum);
-				int fneg = fbits ^ (1 << 31);
-				methodContext.push(Float.intBitsToFloat(fneg));
+				methodContext.push(-(float) methodContext.pop());
 				break;
 			case LNEG:
 				methodContext.push((~(long) methodContext.pop()) + 1);
 				break;
 			case DNEG:
-				Double dnum = (Double) methodContext.pop();
-				long dbits = Double.doubleToLongBits(dnum);
-				long dneg = dbits ^ (1L << 63);
-				methodContext.push(Double.longBitsToDouble(dneg));
+				methodContext.push(-(double) methodContext.pop());
 				break;
 			case ISHL:
 				val2 = methodContext.pop();
@@ -392,8 +389,7 @@ public class ExecutionEngine {
 				methodContext.push((long) val ^ (long) val2);
 				break;
 			case IINC:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case I2L:
 				int i = (int) methodContext.pop();
 				methodContext.push((long) i);
@@ -599,11 +595,9 @@ public class ExecutionEngine {
 				currentInstruction = (int) methodContext.load(index);
 				break;
 			case TABLESWITCH:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case LOOKUPSWITCH:
-				//todo
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case GETSTATIC:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
@@ -661,32 +655,32 @@ public class ExecutionEngine {
 				}
 				break;
 			case INVOKEINTERFACE:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case INVOKEDYNAMIC:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case NEW:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ClassInfo classInfo = (ClassInfo) method.owner.runtimeConstantPool[index - 1];
 				methodContext.push(classInfo.getKlass().newInstance());
 				break;
 			case NEWARRAY:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case ANEWARRAY:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case ATHROW:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case CHECKCAST:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case INSTANCEOF:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case MONITORENTER:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case MONITOREXIT:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case WIDE:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case MULTIANEWARRAY:
-				break;
+				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case IFNULL:
 				if (methodContext.pop() == null) {
 					branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
@@ -717,6 +711,7 @@ public class ExecutionEngine {
 			}
 			
 		}
+		//check to make sure we don't try to pop when the stack is expected to be empty
 		if (opcode != RETURN) {
 			return methodContext.pop();
 		} else {
