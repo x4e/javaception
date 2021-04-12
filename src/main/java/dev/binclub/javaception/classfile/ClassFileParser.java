@@ -5,39 +5,19 @@ import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 import static dev.binclub.javaception.utils.ByteUtils.*;
-import static dev.binclub.javaception.utils.ByteUtils.readUnsignedShort;
 
 public class ClassFileParser {
-	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
-		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
-	}
-	
-	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
-		byte[] data = new byte[buffer.remaining()];
-		buffer.get(data);
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
-	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
-	
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
-	
-	private final byte[] data;
-	private final InstanceOop loader;
-	
-	private int accessOffset;
-	
 	public final Object[] constantPool;
 	public final int majorVersion;
 	public final int minorVersion;
@@ -45,24 +25,13 @@ public class ClassFileParser {
 	public final String className;
 	public final Klass superClass;
 	public final Klass[] interfaces;
-	
-	public final FieldInfo[] fields;
 	public final MethodInfo[] methods;
-	
+	private final byte[] data;
+	private final InstanceOop loader;
+	public FieldInfo[] fields;
 	public String sourceFile;
 	public BootstrapMethod[] bootstrapMethods;
-	
-	public Klass toKlass() {
-		return new Klass(
-			loader,
-			constantPool,
-			className,
-			superClass,
-			interfaces,
-			fields,
-			methods
-		);
-	}
+	private int accessOffset;
 	
 	private ClassFileParser(byte[] data, InstanceOop loader) throws ClassNotFoundException {
 		this(data, 0, loader);
@@ -137,6 +106,45 @@ public class ClassFileParser {
 		}
 		
 		readClassAttributes(attributesOffset, constantPool);
+		sortFields();
+	}
+	
+	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
+		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
+	}
+	
+	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
+		byte[] data = new byte[buffer.remaining()];
+		buffer.get(data);
+		return new ClassFileParser(data, loader).toKlass();
+	}
+	
+	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
+		return new ClassFileParser(data, loader).toKlass();
+	}
+	
+	//fields are sorted so non static are first makes indexing easier
+	public void sortFields() {
+		List<FieldInfo> tempFields = new ArrayList<>(fields.length);
+		Collections.addAll(tempFields, fields);
+		tempFields.sort((f1, f2) -> {
+			boolean f1Static = (f1.access & ACC_STATIC) != 0;
+			boolean f2Static = (f2.access & ACC_STATIC) != 0;
+			return Boolean.compare(f1Static, f2Static);
+		});
+		fields = tempFields.toArray(fields);
+	}
+	
+	public Klass toKlass() {
+		return new Klass(
+			loader,
+			constantPool,
+			className,
+			superClass,
+			interfaces,
+			fields,
+			methods
+		);
 	}
 	
 	private int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {
@@ -248,9 +256,10 @@ public class ClassFileParser {
 			case CONSTANT_Fieldref:
 			case CONSTANT_Methodref:
 			case CONSTANT_InterfaceMethodref:
+				RefInfo.RefType type = RefInfo.RefType.values()[tag - CONSTANT_Fieldref];
 				int classIndex = readUnsignedShort(data, offset);
 				int nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex)
+				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex, type)
 					.resolve(constantPool);
 				offset += 4;
 				break;

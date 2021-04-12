@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classloader;
 
+import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.klass.ArrayKlass;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
@@ -61,6 +62,14 @@ public class KlassLoader {
 			Klass out = BootstrapKlassLoader.loadClass(name);
 			if (out != null) {
 				return out;
+			} else {
+				try {
+					return ClassFileParser.parse(KlassLoader.class.getClassLoader()
+						                      .getResourceAsStream(name + ".class"), null);
+				}
+				catch (Throwable err) {
+				
+				}
 			}
 			throw new ClassNotFoundException(name);
 		} else {
