@@ -14,18 +14,23 @@ public class ClassFileParserTests {
 	public void testItself() {
 		Klass klass = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
 		assertNotNull(klass);
+		int testsRan = 0;
 		for (MethodInfo method : klass.methods) {
 			if (method.name.equals("testField")) {
 				Object result = ExecutionEngine.invokeMethodObj(klass, null, method);
 				assertEquals(result, -5);
+				testsRan += 1;
 			} else if (method.name.equals("addTest")) {
 				Object result = ExecutionEngine.invokeMethodObj(klass, null, method, 5, 5);
 				assertEquals(result, 10);
+				testsRan += 1;
 			} else if (method.name.equals("testCreate")){
 				ExecutionEngine.invokeMethodObj(klass, null, method);
+				testsRan += 1;
 			}
 		}
-		//throw new IllegalStateException("No method found");
+		if (testsRan != 3)
+			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}
 	public int nonStaticField;
 	private static int field = -1;

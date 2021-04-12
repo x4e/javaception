@@ -22,7 +22,7 @@ public class ExecutionEngine {
 		}
 		CodeAttribute code = method.code;
 		MethodContext methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
-		
+
 		// Store arguments in local variables
 		{
 			int index = 0;
@@ -40,7 +40,7 @@ public class ExecutionEngine {
 				}
 			}
 		}
-		
+
 		byte[] instructions = code.getCode();
 		int currentInstruction = code.codeOffset;
 		int opcode = ByteUtils.readUnsignedByte(instructions, currentInstruction);
@@ -379,7 +379,6 @@ public class ExecutionEngine {
 					} else {
 						methodContext.push(-1);
 					}
-					
 				}
 			}
 			case FCMPL, FCMPG -> {
@@ -400,7 +399,6 @@ public class ExecutionEngine {
 						} else {
 							methodContext.push(-1);
 						}
-						
 					}
 				}
 			}
@@ -422,7 +420,6 @@ public class ExecutionEngine {
 						} else {
 							methodContext.push(-1);
 						}
-						
 					}
 				}
 			}
@@ -615,9 +612,9 @@ public class ExecutionEngine {
 			default ->
 				throw new UnsupportedOperationException("Unsupported opcode " + opcode);
 			}
+
 			if (opcode != RET) {
 				if (branchOffset != 0) {
-					System.out.println("branching");
 					currentInstruction += branchOffset;
 					branchOffset = 0;
 				} else {
@@ -627,12 +624,12 @@ public class ExecutionEngine {
 				}
 			}
 		}
+
 		//check to make sure we don't try to pop when the stack is expected to be empty
 		if (opcode != RETURN) {
 			return methodContext.pop();
 		} else {
 			return null;
 		}
-		
 	}
 }
