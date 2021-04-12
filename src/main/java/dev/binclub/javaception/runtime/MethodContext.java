@@ -12,11 +12,16 @@ public class MethodContext {
 	
 	public void push(Object obj) {
 		stack[stackPointer] = obj;
-		++stackPointer;
+		stackPointer += 1;
 	}
 	
 	public Object pop() {
-		return stack[--stackPointer];
+		stackPointer -= 1;
+		return stack[stackPointer];
+	}
+	
+	public Object peek() {
+		return stack[stackPointer - 1];
 	}
 	
 	public void store(int index, Object obj) {
