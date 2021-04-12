@@ -29,6 +29,6 @@ public class ClassType extends Type {
 	
 	@Override
 	public String toString() {
-		return "L" + name + ";";
+		return "L%s;".formatted(name);
 	}
 }

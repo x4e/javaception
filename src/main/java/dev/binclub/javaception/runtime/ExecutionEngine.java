@@ -5,6 +5,7 @@ import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.OpcodeStride;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
+import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.utils.ByteUtils;
@@ -15,7 +16,7 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
 public class ExecutionEngine {
 	// invokes method expecting a return obj to but put onto the caller stack
-	public static Object invokeMethodObj(InstanceOop instance, MethodInfo method, Object... args) {
+	public static Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
 		if (!method.owner.resolved) {
 			method.owner.resolve();
 		}
@@ -601,37 +602,38 @@ public class ExecutionEngine {
 			case GETSTATIC:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				methodContext.push(method.owner.staticFields[ref.getID()]);
+				methodContext.push(method.owner.staticFields[ref.getID(owner)]);
 				break;
 			case PUTSTATIC:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				method.owner.staticFields[ref.getID()] = methodContext.pop();
+				method.owner.staticFields[ref.getID(owner)] = methodContext.pop();
 				break;
 			case GETFIELD:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				methodContext.push(((InstanceOop) methodContext.pop()).fields[ref.getID()]);
+				methodContext.push(((InstanceOop) methodContext.pop()).fields[ref.getID(owner)]);
 				break;
 			case PUTFIELD:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				((InstanceOop) methodContext.pop()).fields[ref.getID()] = methodContext.pop();
+				((InstanceOop) methodContext.pop()).fields[ref.getID(owner)] = methodContext.pop();
 				break;
 			case INVOKEVIRTUAL:
 			case INVOKESPECIAL:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				MethodInfo targetMethod = ref.getOwner().methods[ref.getID()];
-				Object ret = null;
+				MethodInfo targetMethod = ref.getOwner(owner).methods[ref.getID(owner)];
+				InstanceOop inst = (InstanceOop) methodContext.pop();
+				Object ret;
 				if (targetMethod.descriptor.length == 1) {
-					ret = ExecutionEngine.invokeMethodObj((InstanceOop) methodContext.pop(), targetMethod);
+					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod);
 				} else {
 					Object[] params = new Object[targetMethod.descriptor.length - 1];
 					for (int param = targetMethod.descriptor.length - 1; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
-					ret = ExecutionEngine.invokeMethodObj((InstanceOop) methodContext.pop(), targetMethod, params);
+					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
 				}
 				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
@@ -640,15 +642,16 @@ public class ExecutionEngine {
 			case INVOKESTATIC:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				targetMethod = ref.getOwner().methods[ref.getID()];
+				Klass methodOwner = ref.getOwner(owner);
+				targetMethod = methodOwner.methods[ref.getID(owner)];
 				if (targetMethod.descriptor.length == 1) {
-					ret = ExecutionEngine.invokeMethodObj(null, targetMethod);
+					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod);
 				} else {
 					Object[] params = new Object[targetMethod.descriptor.length];
 					for (int param = targetMethod.descriptor.length - 1; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
-					ret = ExecutionEngine.invokeMethodObj(null, targetMethod, params);
+					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod, params);
 				}
 				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
@@ -661,7 +664,7 @@ public class ExecutionEngine {
 			case NEW:
 				index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ClassInfo classInfo = (ClassInfo) method.owner.runtimeConstantPool[index - 1];
-				methodContext.push(classInfo.getKlass().newInstance());
+				methodContext.push(classInfo.getKlass(owner).newInstance());
 				break;
 			case NEWARRAY:
 				throw new UnsupportedOperationException("Opcode not supported " + opcode);

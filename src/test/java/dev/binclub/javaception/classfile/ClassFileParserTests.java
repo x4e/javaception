@@ -12,17 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ClassFileParserTests {
 	@Test
 	public void testItself() {
-		Klass klassFile = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
-		assertNotNull(klassFile);
-		for (MethodInfo method : klassFile.methods) {
+		Klass klass = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
+		assertNotNull(klass);
+		for (MethodInfo method : klass.methods) {
 			if (method.name.equals("testField")) {
-				Object result = ExecutionEngine.invokeMethodObj(null, method);
+				Object result = ExecutionEngine.invokeMethodObj(klass, null, method);
 				assertEquals(result, -5);
 			} else if (method.name.equals("addTest")) {
-				Object result = ExecutionEngine.invokeMethodObj(null, method, 5, 5);
+				Object result = ExecutionEngine.invokeMethodObj(klass, null, method, 5, 5);
 				assertEquals(result, 10);
 			} else if (method.name.equals("testCreate")){
-				ExecutionEngine.invokeMethodObj(null, method);
+				ExecutionEngine.invokeMethodObj(klass, null, method);
 			}
 		}
 		//throw new IllegalStateException("No method found");

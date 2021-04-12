@@ -63,11 +63,11 @@ public class KlassLoader {
 			if (out != null) {
 				return out;
 			} else {
+				// TODO: THIS IS UNSAFE
 				try {
 					return ClassFileParser.parse(KlassLoader.class.getClassLoader()
 						                      .getResourceAsStream(name + ".class"), null);
-				}
-				catch (Throwable err) {
+				} catch (Throwable err) {
 				
 				}
 			}

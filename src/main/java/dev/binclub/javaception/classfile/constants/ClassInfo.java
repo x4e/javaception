@@ -3,6 +3,7 @@ package dev.binclub.javaception.classfile.constants;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.ClassType;
+import dev.binclub.javaception.type.Type;
 
 public class ClassInfo {
 	public final int nameIndex;
@@ -19,9 +20,9 @@ public class ClassInfo {
 		return this;
 	}
 	
-	public Klass getKlass() {
+	public Klass getKlass(Klass referencedBy) {
 		if (this.klass == null) {
-			this.klass = SystemDictionary.findReferencedClass(null, new ClassType(name));
+			this.klass = SystemDictionary.findReferencedClass(referencedBy, Type.classType(name));
 		}
 		return this.klass;
 	}

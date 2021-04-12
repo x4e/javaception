@@ -3,6 +3,7 @@ package dev.binclub.javaception.classfile.constants;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.ClassType;
+import dev.binclub.javaception.type.Type;
 
 public class RefInfo {
 	public final int classIndex, nameAndTypeIndex;
@@ -25,16 +26,16 @@ public class RefInfo {
 		return this;
 	}
 	
-	public Klass getOwner() {
+	public Klass getOwner(Klass referencedBy) {
 		if (owner == null) {
-			this.owner = SystemDictionary.findReferencedClass(null, new ClassType(classInfo.name));
+			this.owner = SystemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
 		}
 		return this.owner;
 	}
 	
-	public int getID() {
+	public int getID(Klass referencedBy) {
 		if (owner == null || id == -1) {
-			Klass klazz = SystemDictionary.findReferencedClass(null, new ClassType(classInfo.name));
+			Klass klazz = SystemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
 			this.owner = klazz;
 			switch (type) {
 			case FIELD -> {

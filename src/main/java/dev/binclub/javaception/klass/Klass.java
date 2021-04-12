@@ -116,12 +116,12 @@ public class Klass {
 		resolved = true;
 		for (MethodInfo method : methods) {
 			if (method.name.equals("<clinit>")) {
-				ExecutionEngine.invokeMethodObj(null, method);
+				ExecutionEngine.invokeMethodObj(this, null, method);
 			}
 		}
 	}
 	
 	public InstanceOop newInstance() {
-		return new InstanceOop(this.fields.length - this.staticFieldCount);
+		return new InstanceOop(this, this.fields.length - this.staticFieldCount);
 	}
 }
