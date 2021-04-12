@@ -18,15 +18,15 @@ public class TypeTests {
 	
 	@Test
 	public void testArrayFieldDescriptors() {
-		assertEquals(Type.parseFieldDescriptor("[B"), new ArrayType(1, PrimitiveType.BYTE));
-		assertEquals(Type.parseFieldDescriptor("[[[[[[[[[Ljava/lang/Object;"), new ArrayType(9, new ClassType("java/lang/Object")));
+		assertEquals(Type.parseFieldDescriptor("[B"), Type.arrayType(1, PrimitiveType.BYTE));
+		assertEquals(Type.parseFieldDescriptor("[[[[[[[[[Ljava/lang/Object;"), Type.arrayType(9, Type.classType("java/lang/Object")));
 	}
 	
 	@Test
 	public void testClassFieldDescriptors() {
-		assertEquals(Type.parseFieldDescriptor("Ljava/lang/Object;"), new ClassType("java/lang/Object"));
-		assertEquals(Type.parseFieldDescriptor("Ljava.lang.Object;"), new ClassType("java.lang.Object")); // this shouldnt happen in reality
-		assertEquals(Type.parseFieldDescriptor("Ljava[lang[BObjectBZIC;"), new ClassType("java[lang[BObjectBZIC"));
+		assertEquals(Type.parseFieldDescriptor("Ljava/lang/Object;"), Type.classType("java/lang/Object"));
+		assertEquals(Type.parseFieldDescriptor("Ljava.lang.Object;"), Type.classType("java.lang.Object")); // this shouldnt happen in reality
+		assertEquals(Type.parseFieldDescriptor("Ljava[lang[BObjectBZIC;"), Type.classType("java[lang[BObjectBZIC"));
 	}
 	
 	@Test
@@ -42,15 +42,15 @@ public class TypeTests {
 	public void testMethodDescriptors() {
 		assertArrayEquals(
 			Type.parseMethodDescriptor("(Ljava/lang/Object;ZI)V"),
-			new Type[]{new ClassType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT, PrimitiveType.VOID}
+			new Type[]{Type.classType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT, PrimitiveType.VOID}
 		);
 		assertArrayEquals(
 			Type.parseMethodDescriptor("(Ljava/lang/Object;[[[Z)V"),
-			new Type[]{new ClassType("java/lang/Object"), new ArrayType(3, PrimitiveType.BYTE), PrimitiveType.VOID}
+			new Type[]{Type.classType("java/lang/Object"), Type.arrayType(3, PrimitiveType.BYTE), PrimitiveType.VOID}
 		);
 		
 		assertEquals(Type.parseMethodReturnType("()V"), PrimitiveType.VOID);
-		assertEquals(Type.parseMethodReturnType("()Ljava/lang/Object;"), new ClassType("java/lang/Object"));
+		assertEquals(Type.parseMethodReturnType("()Ljava/lang/Object;"), Type.classType("java/lang/Object"));
 	}
 	
 	@Test

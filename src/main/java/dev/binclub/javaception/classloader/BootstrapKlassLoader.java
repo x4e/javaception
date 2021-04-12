@@ -3,8 +3,6 @@ package dev.binclub.javaception.classloader;
 import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.klass.Klass;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.module.ModuleFinder;
 import java.lang.module.ModuleReference;
@@ -12,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static dev.binclub.javaception.utils.GenericUtils.sneakyThrow;
 

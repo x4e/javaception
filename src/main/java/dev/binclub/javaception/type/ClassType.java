@@ -9,7 +9,8 @@ public class ClassType extends Type {
 	 */
 	public final String name;
 	
-	public ClassType(String name) {
+	// Trusted constructor: No argument validation
+	ClassType(String name) {
 		this.name = name;
 	}
 	

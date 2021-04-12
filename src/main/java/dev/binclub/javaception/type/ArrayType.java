@@ -6,9 +6,9 @@ public class ArrayType extends ClassType {
 	public final int dimensions;
 	public final Type inner;
 	
-	public ArrayType(int dimensions, Type inner) {
+	// Trusted constructor: No argument validation
+	ArrayType(int dimensions, Type inner) {
 		super(toDescriptor(dimensions, inner));
-		if (dimensions < 1) throw new IllegalArgumentException("Dimensions " + dimensions);
 		this.dimensions = dimensions;
 		this.inner = inner;
 	}

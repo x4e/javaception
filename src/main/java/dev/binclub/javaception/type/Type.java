@@ -1,13 +1,24 @@
 package dev.binclub.javaception.type;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public abstract class Type {
 	public static ClassType classType(String className) {
+		Objects.requireNonNull(className, "className");
 		if (className.length() < 1 || className.charAt(className.length() - 1) == ';') {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(className);
 		}
 		return new ClassType(className);
+	}
+	
+	public static ArrayType arrayType(int dimensions, Type inner) {
+		Objects.requireNonNull(inner, "inner");
+		if (dimensions < 1)
+			throw new IllegalArgumentException("Dimensions " + dimensions + " is less than 1");
+		if (inner instanceof ArrayType)
+			throw new IllegalArgumentException("Circular array (attempted to have inner element " + inner + ")");
+		return new ArrayType(dimensions, inner);
 	}
 	
 	/**

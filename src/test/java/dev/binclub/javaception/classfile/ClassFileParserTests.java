@@ -1,35 +1,27 @@
 package dev.binclub.javaception.classfile;
 
-import dev.binclub.javaception.classloader.BootstrapKlassLoader;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
-import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.ExecutionEngine;
-import dev.binclub.javaception.type.ClassType;
+import dev.binclub.javaception.type.Type;
 import org.junit.jupiter.api.Test;
-
-import java.io.InputStream;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ClassFileParserTests {
 	@Test
-	public void testItself() throws Throwable {
-		
-		Klass klassFile = SystemDictionary.findReferencedClass(null, new ClassType("dev/binclub/javaception/classfile/ClassFileParserTests"));
+	public void testItself() {
+		Klass klassFile = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
 		assertNotNull(klassFile);
 		for (MethodInfo method : klassFile.methods) {
 			if (method.name.equals("testField")) {
 				Object result = ExecutionEngine.invokeMethodObj(null, method);
 				assertEquals(result, -5);
-			}
-			if (method.name.equals("addTest")) {
+			} else if (method.name.equals("addTest")) {
 				Object result = ExecutionEngine.invokeMethodObj(null, method, 5, 5);
 				assertEquals(result, 10);
-			}
-			if(method.name.equals("testCreate")){
+			} else if (method.name.equals("testCreate")){
 				ExecutionEngine.invokeMethodObj(null, method);
 			}
 		}
