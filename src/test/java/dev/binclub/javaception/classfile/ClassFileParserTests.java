@@ -27,9 +27,14 @@ public class ClassFileParserTests {
 			} else if (method.name.equals("testCreate")){
 				ExecutionEngine.invokeMethodObj(klass, null, method);
 				testsRan += 1;
+			} else if (method.name.equals("loopTest")) {
+				int result = (int) ExecutionEngine.invokeMethodObj(klass, null, method, 5);
+				int expected = loopTest(5);
+				testsRan += 1;
+				assertEquals(result, expected);
 			}
 		}
-		if (testsRan != 3)
+		if (testsRan != 4)
 			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}
 	public int nonStaticField;
@@ -47,5 +52,13 @@ public class ClassFileParserTests {
 	
 	public static void testCreate(){
 		new ClassFileParserTests();
+	}
+	
+	public static int loopTest(int start) {
+		int total = start;
+		for (int i = 0; i < 500000; i++) {
+			total += i;
+		}
+		return total;
 	}
 }

@@ -58,15 +58,13 @@ public class ExecutionEngine {
 			case DCONST_0, DCONST_1 ->
 				methodContext.push((double) (opcode - DCONST_0));
 			case BIPUSH ->
-				methodContext.push((int) (instructions[currentInstruction + 1]));
+				methodContext.push((int) ByteUtils.readByte(instructions, currentInstruction + 1));
 			case SIPUSH ->
-				methodContext.push((instructions[currentInstruction + 1] << 8) | instructions[currentInstruction + 2]);
+				methodContext.push((int) ByteUtils.readShort(instructions, currentInstruction + 1));
 			case LDC ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case LDC_W ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case LDC2_W ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+				methodContext.push(method.owner.runtimeConstantPool[ByteUtils.readUnsignedByte(instructions, currentInstruction + 1) - 1]);
+			case LDC_W, LDC2_W ->
+				methodContext.push(method.owner.runtimeConstantPool[ByteUtils.readUnsignedShort(instructions, currentInstruction + 1) - 1]);
 			case ILOAD, LLOAD, FLOAD, DLOAD, ALOAD -> {
 				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
 				methodContext.push(methodContext.load(index));
@@ -308,8 +306,11 @@ public class ExecutionEngine {
 				Object val = methodContext.pop();
 				methodContext.push((long) val ^ (long) val2);
 			}
-			case IINC ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case IINC -> {
+				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
+				int toAdd = ByteUtils.readByte(instructions, currentInstruction + 2);
+				methodContext.store(index, (int) methodContext.load(index) + toAdd);
+			}
 			case I2L -> {
 				int i = (int) methodContext.pop();
 				methodContext.push((long) i);
@@ -617,6 +618,7 @@ public class ExecutionEngine {
 				if (branchOffset != 0) {
 					currentInstruction += branchOffset;
 					branchOffset = 0;
+					opcode = instructions[currentInstruction];
 				} else {
 					int strideAmount = OpcodeStride.getStrideAmount(opcode, currentInstruction, instructions);
 					currentInstruction += strideAmount + 1;
