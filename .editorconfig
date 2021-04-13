@@ -1,11 +1,12 @@
 [*]
 charset = utf-8
 end_of_line = lf
-indent_size = 4
 indent_style = tab
-insert_final_newline = true
+tab_width = 3
 max_line_length = 120
-tab_width = 4
+trim_trailing_whitespace = false
+insert_final_newline = true
+
 ij_continuation_indent_size = 8
 ij_formatter_off_tag = @formatter:off
 ij_formatter_on_tag = @formatter:on
