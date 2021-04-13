@@ -9,6 +9,7 @@ import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.utils.ByteUtils;
+import profiler.Profiler;
 
 import java.lang.reflect.Modifier;
 
@@ -45,6 +46,7 @@ public class ExecutionEngine {
 		int currentInstruction = code.codeOffset;
 		int opcode = ByteUtils.readUnsignedByte(instructions, currentInstruction);
 		int branchOffset = 0;
+		Profiler.start(method);
 		while (opcode < IRETURN || opcode > RETURN) {
 			switch (opcode) {
 			case NOP -> {}
@@ -626,6 +628,7 @@ public class ExecutionEngine {
 				}
 			}
 		}
+		Profiler.finish(method);
 
 		//check to make sure we don't try to pop when the stack is expected to be empty
 		if (opcode != RETURN) {
@@ -633,5 +636,11 @@ public class ExecutionEngine {
 		} else {
 			return null;
 		}
+	}
+	
+	public static void printAllProfileData() {
+		Profiler.dataMap.forEach((name, pdata) -> {
+			System.out.printf("%s took %d microseconds %n", name, pdata.getAverage() / 1000);
+		});
 	}
 }

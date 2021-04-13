@@ -5,6 +5,7 @@ import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.runtime.ExecutionEngine;
 import dev.binclub.javaception.type.Type;
 import org.junit.jupiter.api.Test;
+import profiler.Profiler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,6 +35,7 @@ public class ClassFileParserTests {
 				assertEquals(result, expected);
 			}
 		}
+		ExecutionEngine.printAllProfileData();
 		if (testsRan != 4)
 			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}
