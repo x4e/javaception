@@ -285,8 +285,7 @@ public class ClassFileParser {
 				break;
 			case CONSTANT_MethodType:
 				int descriptorIndex = readUnsignedShort(data, offset);
-				constantPool[i] = new MethodTypeInfo(descriptorIndex)
-					.resolve(constantPool);
+				constantPool[i] = new MethodTypeInfo(descriptorIndex);
 				offset += 2;
 				break;
 			case CONSTANT_NameAndType:
