@@ -71,7 +71,7 @@ public class SystemDictionary {
 	public static InstanceOop createEmptyStringInstance(){
 		 Klass stringKlass = SystemDictionary.java_lang_String();
 		 int valID = stringKlass.getFieldID("value", "[B");
-		 int coderID = stringKlass.getFieldID("coder", "I");
+		 int coderID = stringKlass.getFieldID("coder", "B");
 		 InstanceOop instance = stringKlass.newInstance();
 		 instance.fields[valID] = new byte[]{};
 		 instance.fields[coderID] = 0;

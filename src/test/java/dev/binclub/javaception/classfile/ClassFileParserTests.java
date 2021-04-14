@@ -16,8 +16,8 @@ public class ClassFileParserTests {
 	public void testItself() {
 		Klass klass = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
 		Klass stringKlass = SystemDictionary.java_lang_String();
-		MethodInfo init = stringKlass.findMethod("<init>",new Type[]{Type.classType("java/lang/String"), PrimitiveType.VOID});
-		ExecutionEngine.invokeMethodObj(stringKlass,null,init);
+		MethodInfo init = stringKlass.findMethod("<init>",new Type[]{PrimitiveType.VOID});
+		ExecutionEngine.invokeMethodObj(stringKlass,stringKlass.newInstance(),init);
 		assertNotNull(init);
 		assertNotNull(klass);
 		int testsRan = 0;

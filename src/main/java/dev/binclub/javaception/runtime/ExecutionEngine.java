@@ -5,6 +5,7 @@ import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.OpcodeStride;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
+import dev.binclub.javaception.classfile.constants.StringInfo;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
@@ -63,8 +64,13 @@ public class ExecutionEngine {
 				methodContext.push((int) ByteUtils.readByte(instructions, currentInstruction + 1));
 			case SIPUSH ->
 				methodContext.push((int) ByteUtils.readShort(instructions, currentInstruction + 1));
-			case LDC ->
-				methodContext.push(method.owner.runtimeConstantPool[ByteUtils.readUnsignedByte(instructions, currentInstruction + 1) - 1]);
+			case LDC -> {
+				Object constant = method.owner.runtimeConstantPool[ByteUtils.readUnsignedByte(instructions, currentInstruction + 1) - 1];
+				if(constant instanceof StringInfo){
+					constant = ((StringInfo) constant).resolve(method.owner.runtimeConstantPool);
+				}
+				methodContext.push(constant);
+			}
 			case LDC_W, LDC2_W ->
 				methodContext.push(method.owner.runtimeConstantPool[ByteUtils.readUnsignedShort(instructions, currentInstruction + 1) - 1]);
 			case ILOAD, LLOAD, FLOAD, DLOAD, ALOAD -> {
@@ -532,7 +538,8 @@ public class ExecutionEngine {
 			case PUTFIELD -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				((InstanceOop) methodContext.pop()).fields[ref.getID(owner)] = methodContext.pop();
+				Object toPut = methodContext.pop();
+				((InstanceOop) methodContext.pop()).fields[ref.getID(owner)] = toPut;
 			}
 			case INVOKEVIRTUAL, INVOKESPECIAL -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
@@ -583,8 +590,13 @@ public class ExecutionEngine {
 			}
 			case NEWARRAY ->
 				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case ANEWARRAY ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case ANEWARRAY -> {
+				int size = (int) methodContext.pop();
+				if (size < 0) {
+					throw new NegativeArraySizeException();
+				}
+				methodContext.push(new Object[size]);
+			}
 			case ATHROW ->
 				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case CHECKCAST ->

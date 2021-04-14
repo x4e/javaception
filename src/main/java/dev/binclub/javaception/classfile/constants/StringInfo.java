@@ -17,7 +17,10 @@ public class StringInfo {
 			UtfInfo utf = (UtfInfo) cp[utfIndex - 1];
 			if (utf != null) {
 				Klass java_lang_String = SystemDictionary.java_lang_String();
-				// TODO
+				if(utf.get().isEmpty()){
+					inner = SystemDictionary.createEmptyStringInstance();
+					return inner;
+				}
 				throw new IllegalStateException("Unimplemented");
 			}
 		}
