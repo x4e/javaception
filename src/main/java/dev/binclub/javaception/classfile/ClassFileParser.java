@@ -69,8 +69,9 @@ public class ClassFileParser {
 		interfaces = new Klass[interfacesCount];
 		int fieldsOffset = accessOffset + 8;
 		for (int i = 0; i < interfacesCount; i++) {
-			interfaces[i] = KlassLoader.loadClass(loader, (String) constantPool[readUnsignedShort(data, fieldsOffset) - 1]);
-			fieldsOffset += 2;
+			 ClassInfo classInfo = (ClassInfo) constantPool[readUnsignedShort(data, fieldsOffset) - 1];
+			 interfaces[i] = KlassLoader.loadClass(loader, classInfo.name);
+			 fieldsOffset += 2;
 		}
 		
 		if ((access & ACC_MODULE) != 0) {
