@@ -9,7 +9,8 @@ public class MethodTypeInfo {
 	}
 	
 	public Object resolve(Object[] cp) {
-		descriptor = (String) cp[descriptorIndex - 1];
+		UtfInfo info = (UtfInfo) cp[descriptorIndex - 1];
+		descriptor = info.get();
 		return this;
 	}
 }
