@@ -67,4 +67,14 @@ public class SystemDictionary {
 		}
 		return klass;
 	}
+	
+	public static InstanceOop createEmptyStringInstance(){
+		 Klass stringKlass = SystemDictionary.java_lang_String();
+		 int valID = stringKlass.getFieldID("value", "[B");
+		 int coderID = stringKlass.getFieldID("coder", "I");
+		 InstanceOop instance = stringKlass.newInstance();
+		 instance.fields[valID] = new byte[]{};
+		 instance.fields[coderID] = 0;
+		 return instance; 
+	}
 }

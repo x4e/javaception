@@ -3,6 +3,7 @@ package dev.binclub.javaception.classfile;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.runtime.ExecutionEngine;
+import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.type.Type;
 import org.junit.jupiter.api.Test;
 import profiler.Profiler;
@@ -14,6 +15,10 @@ public class ClassFileParserTests {
 	@Test
 	public void testItself() {
 		Klass klass = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
+		Klass stringKlass = SystemDictionary.java_lang_String();
+		MethodInfo init = stringKlass.findMethod("<init>",new Type[]{Type.classType("java/lang/String"), PrimitiveType.VOID});
+		ExecutionEngine.invokeMethodObj(stringKlass,null,init);
+		assertNotNull(init);
 		assertNotNull(klass);
 		int testsRan = 0;
 		for (MethodInfo method : klass.methods) {
