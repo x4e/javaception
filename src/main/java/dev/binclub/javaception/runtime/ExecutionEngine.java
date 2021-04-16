@@ -12,6 +12,7 @@ import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.utils.ByteUtils;
 import profiler.Profiler;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
@@ -545,15 +546,16 @@ public class ExecutionEngine {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
 				MethodInfo targetMethod = ref.getOwner(owner).methods[ref.getID(owner)];
-				InstanceOop inst = (InstanceOop) methodContext.pop();
 				Object ret;
 				if (targetMethod.descriptor.length == 1) {
+					InstanceOop inst = (InstanceOop) methodContext.pop();
 					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod);
 				} else {
 					Object[] params = new Object[targetMethod.descriptor.length - 1];
-					for (int param = targetMethod.descriptor.length - 1; param > -1; param--) {
+					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
+					InstanceOop inst = (InstanceOop) methodContext.pop();
 					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
 				}
 				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
@@ -569,8 +571,8 @@ public class ExecutionEngine {
 				if (targetMethod.descriptor.length == 1) {
 					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod);
 				} else {
-					Object[] params = new Object[targetMethod.descriptor.length];
-					for (int param = targetMethod.descriptor.length - 1; param > -1; param--) {
+					Object[] params = new Object[targetMethod.descriptor.length - 1];
+					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
 					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod, params);
@@ -597,6 +599,11 @@ public class ExecutionEngine {
 				}
 				methodContext.push(new Object[size]);
 			}
+			case ARRAYLENGTH -> {
+				Object arr = methodContext.pop();
+				int length = Array.getLength(arr);
+				methodContext.push(length);
+ 			}
 			case ATHROW ->
 				throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case CHECKCAST ->
@@ -631,8 +638,8 @@ public class ExecutionEngine {
 			if (opcode != RET) {
 				if (branchOffset != 0) {
 					currentInstruction += branchOffset;
+					opcode = ByteUtils.readUnsignedByte(instructions, currentInstruction);
 					branchOffset = 0;
-					opcode = instructions[currentInstruction];
 				} else {
 					int strideAmount = OpcodeStride.getStrideAmount(opcode, currentInstruction, instructions);
 					currentInstruction += strideAmount + 1;
