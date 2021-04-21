@@ -20,6 +20,9 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 public class ExecutionEngine {
 	// invokes method expecting a return obj to but put onto the caller stack
 	public static Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
+		if ((method.access & ACC_NATIVE) != 0) {
+			throw new UnsupportedOperationException("Native methods are not yet supported " + method.name + " , " + method.signature);
+		}
 		if (!method.owner.resolved) {
 			method.owner.resolve();
 		}
@@ -69,6 +72,10 @@ public class ExecutionEngine {
 				Object constant = method.owner.runtimeConstantPool[ByteUtils.readUnsignedByte(instructions, currentInstruction + 1) - 1];
 				if(constant instanceof StringInfo){
 					constant = ((StringInfo) constant).resolve(method.owner.runtimeConstantPool);
+				} else if (constant instanceof ClassInfo) {
+					ClassInfo ci = (ClassInfo) constant;
+					Klass klazz = ci.getKlass(method.owner);
+					constant = klazz.getAsClass();
 				}
 				methodContext.push(constant);
 			}

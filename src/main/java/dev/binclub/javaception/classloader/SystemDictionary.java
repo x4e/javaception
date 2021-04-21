@@ -1,7 +1,6 @@
 package dev.binclub.javaception.classloader;
 
 import dev.binclub.javaception.klass.Klass;
-import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.ArrayType;
 import dev.binclub.javaception.type.ClassType;
@@ -64,6 +63,16 @@ public class SystemDictionary {
 		if (klass == null) {
 			klass = findReferencedClass(null, Type.classType("java/lang/String"));
 			java_lang_String = klass;
+		}
+		return klass;
+	}
+	
+	private static Klass java_lang_Class;
+	public static Klass java_lang_Class(){
+		Klass klass = java_lang_Class;
+		if (klass == null) {
+			klass = findReferencedClass(null, Type.classType("java/lang/Class"));
+			java_lang_Class = klass;
 		}
 		return klass;
 	}

@@ -3,6 +3,7 @@ package dev.binclub.javaception.klass;
 import dev.binclub.javaception.classfile.ClassFileConstants;
 import dev.binclub.javaception.classfile.FieldInfo;
 import dev.binclub.javaception.classfile.MethodInfo;
+import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.ExecutionEngine;
 import dev.binclub.javaception.type.Type;
@@ -123,5 +124,19 @@ public class Klass {
 	
 	public InstanceOop newInstance() {
 		return new InstanceOop(this, this.fields.length - this.staticFieldCount);
+	}
+	
+	InstanceOop asKlass;
+	static int nameId = -1;
+	
+	public InstanceOop getAsClass(){
+		if (asKlass == null) {
+			asKlass = SystemDictionary.java_lang_Class().newInstance();
+			if(nameId == -1){
+				nameId = SystemDictionary.java_lang_Class().getFieldID("name" , "Ljava/lang/String;");
+				asKlass.fields[nameId] = name;
+			}
+		}
+		return asKlass;
 	}
 }
