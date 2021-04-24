@@ -1,8 +1,8 @@
 package dev.binclub.javaception.classfile.constants;
 
+import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
-import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.Type;
 
 public class ClassInfo {
@@ -22,7 +22,17 @@ public class ClassInfo {
 	
 	public Klass getKlass(Klass referencedBy) {
 		if (this.klass == null) {
-			this.klass = SystemDictionary.findReferencedClass(referencedBy, Type.classType(name));
+			if (name.contains("[")) {
+				int dimensions = 0;
+				for(char letter : name.toCharArray()){
+					if(letter == '['){
+						dimensions++;
+					}
+				}
+				this.klass = KlassLoader.createArrayClass(referencedBy, null, Type.arrayType(dimensions, Type.classType(name.replace("[",""))));
+			}else {
+				this.klass = SystemDictionary.findReferencedClass(referencedBy, Type.classType(name));
+			}
 		}
 		return this.klass;
 	}
