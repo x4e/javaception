@@ -21,7 +21,7 @@ public class StringInfo {
 					inner = SystemDictionary.createEmptyStringInstance();
 					return inner;
 				}
-				throw new IllegalStateException("Unimplemented");
+				inner = SystemDictionary.createStringInstance(utf.get().toCharArray());
 			}
 		}
 		return inner;

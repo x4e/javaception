@@ -2,6 +2,7 @@ package dev.binclub.javaception.classloader;
 
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
+import dev.binclub.javaception.runtime.ExecutionEngine;
 import dev.binclub.javaception.type.ArrayType;
 import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.Type;
@@ -67,6 +68,15 @@ public class SystemDictionary {
 		return klass;
 	}
 	
+	private static int valueFieldid = -1;
+	public static String OOPToString(InstanceOop string){
+		if(valueFieldid == -1){
+			valueFieldid = java_lang_String().getFieldID("value","[B");
+		}
+		return new String((byte[])string.fields[valueFieldid]);
+	}
+	
+	
 	private static Klass java_lang_Class;
 	public static Klass java_lang_Class(){
 		Klass klass = java_lang_Class;
@@ -77,13 +87,29 @@ public class SystemDictionary {
 		return klass;
 	}
 	
-	public static InstanceOop createEmptyStringInstance(){
-		 Klass stringKlass = SystemDictionary.java_lang_String();
-		 int valID = stringKlass.getFieldID("value", "[B");
-		 int coderID = stringKlass.getFieldID("coder", "B");
-		 InstanceOop instance = stringKlass.newInstance();
-		 instance.fields[valID] = new byte[]{};
-		 instance.fields[coderID] = 0;
-		 return instance; 
+	private static int valID = -1;
+	private static int coderID = -1;
+	
+	public static InstanceOop createEmptyStringInstance() {
+		Klass stringKlass = SystemDictionary.java_lang_String();
+		if (valID == -1) {
+			valID = stringKlass.getFieldID("value", "[B");
+			coderID = stringKlass.getFieldID("coder", "B");
+		}
+		InstanceOop instance = stringKlass.newInstance();
+		instance.fields[valID] = new byte[]{};
+		instance.fields[coderID] = 0;
+		return instance;
+	}
+	
+	private static int createInstanceMethodID = -1;
+	public static InstanceOop createStringInstance(char[] string){
+		Klass stringKlass = SystemDictionary.java_lang_String();
+		if(createInstanceMethodID == -1) {
+			createInstanceMethodID = stringKlass.getMethodID("<init>", "([CIILjava/lang/Void;)V");
+		}
+		InstanceOop instance = stringKlass.newInstance();
+		ExecutionEngine.invokeMethodObj(stringKlass, instance, stringKlass.methods[createInstanceMethodID], string, 0, string.length, null);
+		return instance;
 	}
 }

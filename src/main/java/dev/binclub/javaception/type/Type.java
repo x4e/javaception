@@ -120,6 +120,7 @@ public abstract class Type {
 			case 'V':
 				return PrimitiveType.VOID;
 			case 'Z':
+				return PrimitiveType.BOOLEAN;
 			case 'B':
 				return PrimitiveType.BYTE;
 			case 'S':
