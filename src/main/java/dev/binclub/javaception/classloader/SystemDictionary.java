@@ -3,9 +3,8 @@ package dev.binclub.javaception.classloader;
 import dev.binclub.javaception.*;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
-import dev.binclub.javaception.type.ArrayType;
-import dev.binclub.javaception.type.ClassType;
-import dev.binclub.javaception.type.Type;
+import dev.binclub.javaception.runtime.ExecutionEngine;
+import dev.binclub.javaception.type.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,16 +31,19 @@ public class SystemDictionary {
 	 * @param className    The name of the referenced class
 	 * @return The referenced class
 	 */
-	public Klass findReferencedClass(Klass referencedBy, ClassType className) {
+	public Klass findReferencedClass(Klass referencedBy, Type className) {
 		try {
 			if (className instanceof ArrayType) {
 				return vm.klassLoader.createArrayClass(referencedBy, referencedBy.classLoader, (ArrayType) className);
-			} else {
+			} else if (className instanceof ClassType) {
+				var classType = (ClassType) className;
 				InstanceOop cl = null;
 				if (referencedBy != null) {
 					cl = referencedBy.classLoader;
 				}
-				return vm.klassLoader.loadClass(cl, className.name);
+				return vm.klassLoader.loadClass(cl, classType.name);
+			} else {
+				throw new UnsupportedOperationException(className.getClass().getName());
 			}
 		} catch (ClassNotFoundException e) {
 			sneakyThrow(e);
@@ -80,5 +82,5 @@ public class SystemDictionary {
 			java_lang_Class = klass;
 		}
 		return klass;
-	}	
+	}
 }

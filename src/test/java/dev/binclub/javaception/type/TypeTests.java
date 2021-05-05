@@ -41,12 +41,12 @@ public class TypeTests {
 	@Test
 	public void testMethodDescriptors() {
 		assertArrayEquals(
-			Type.parseMethodDescriptor("(Ljava/lang/Object;ZI)V"),
-			new Type[]{Type.classType("java/lang/Object"), PrimitiveType.BYTE, PrimitiveType.INT, PrimitiveType.VOID}
+			new Type[]{Type.classType("java/lang/Object"), PrimitiveType.BOOLEAN, PrimitiveType.INT, PrimitiveType.VOID},
+			Type.parseMethodDescriptor("(Ljava/lang/Object;ZI)V")
 		);
 		assertArrayEquals(
-			Type.parseMethodDescriptor("(Ljava/lang/Object;[[[Z)V"),
-			new Type[]{Type.classType("java/lang/Object"), Type.arrayType(3, PrimitiveType.BYTE), PrimitiveType.VOID}
+			new Type[]{Type.classType("java/lang/Object"), Type.arrayType(3, PrimitiveType.BOOLEAN), PrimitiveType.VOID},
+			Type.parseMethodDescriptor("(Ljava/lang/Object;[[[Z)V")
 		);
 		
 		assertEquals(Type.parseMethodReturnType("()V"), PrimitiveType.VOID);

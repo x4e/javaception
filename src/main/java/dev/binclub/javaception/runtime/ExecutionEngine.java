@@ -12,11 +12,16 @@ import dev.binclub.javaception.event.events.MethodEnterEvent;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
+import dev.binclub.javaception.type.Type;
 import dev.binclub.javaception.utils.ByteUtils;
 import profiler.Profiler;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
@@ -67,7 +72,7 @@ public class ExecutionEngine {
 				}
 			}
 		}
-
+		
 		byte[] instructions = code.getCode();
 		int currentInstruction = code.codeOffset;
 		int opcode = ByteUtils.readUnsignedByte(instructions, currentInstruction);
@@ -75,23 +80,18 @@ public class ExecutionEngine {
 		Profiler.start(method);
 		while (opcode < IRETURN || opcode > RETURN) {
 			switch (opcode) {
-			case NOP -> {}
+			case NOP -> {
+			}
 			case ACONST_NULL -> methodContext.push(null);
-			case ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5 ->
-				methodContext.push(opcode - ICONST_0);
-			case LCONST_0, LCONST_1 ->
-				methodContext.push((long) (opcode - LCONST_0));
-			case FCONST_0, FCONST_1, FCONST_2 ->
-				methodContext.push((float) (opcode - FCONST_0));
-			case DCONST_0, DCONST_1 ->
-				methodContext.push((double) (opcode - DCONST_0));
-			case BIPUSH ->
-				methodContext.push((int) ByteUtils.readByte(instructions, currentInstruction + 1));
-			case SIPUSH ->
-				methodContext.push((int) ByteUtils.readShort(instructions, currentInstruction + 1));
+			case ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5 -> methodContext.push(opcode - ICONST_0);
+			case LCONST_0, LCONST_1 -> methodContext.push((long) (opcode - LCONST_0));
+			case FCONST_0, FCONST_1, FCONST_2 -> methodContext.push((float) (opcode - FCONST_0));
+			case DCONST_0, DCONST_1 -> methodContext.push((double) (opcode - DCONST_0));
+			case BIPUSH -> methodContext.push((int) ByteUtils.readByte(instructions, currentInstruction + 1));
+			case SIPUSH -> methodContext.push((int) ByteUtils.readShort(instructions, currentInstruction + 1));
 			case LDC -> {
 				Object constant = method.owner.runtimeConstantPool[ByteUtils.readUnsignedByte(instructions, currentInstruction + 1) - 1];
-				if(constant instanceof StringInfo){
+				if (constant instanceof StringInfo) {
 					constant = ((StringInfo) constant).resolve(method.owner.runtimeConstantPool);
 				} else if (constant instanceof ClassInfo) {
 					ClassInfo ci = (ClassInfo) constant;
@@ -100,8 +100,17 @@ public class ExecutionEngine {
 				}
 				methodContext.push(constant);
 			}
-			case LDC_W, LDC2_W ->
-				methodContext.push(method.owner.runtimeConstantPool[ByteUtils.readUnsignedShort(instructions, currentInstruction + 1) - 1]);
+			case LDC_W, LDC2_W -> {
+				Object constant = method.owner.runtimeConstantPool[ByteUtils.readUnsignedShort(instructions, currentInstruction + 1) - 1];
+				if (constant instanceof StringInfo) {
+					constant = ((StringInfo) constant).resolve(method.owner.runtimeConstantPool);
+				} else if (constant instanceof ClassInfo) {
+					ClassInfo ci = (ClassInfo) constant;
+					Klass klazz = ci.getKlass(method.owner);
+					constant = klazz.asJavaLangClass();
+				}
+				methodContext.push(constant);
+			}
 			case ILOAD, LLOAD, FLOAD, DLOAD, ALOAD -> {
 				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
 				methodContext.push(methodContext.load(index));
@@ -110,14 +119,20 @@ public class ExecutionEngine {
 				LLOAD_0, LLOAD_1, LLOAD_2, LLOAD_3,
 				FLOAD_0, FLOAD_1, FLOAD_2, FLOAD_3,
 				DLOAD_0, DLOAD_1, DLOAD_2, DLOAD_3,
-				ALOAD_0, ALOAD_1, ALOAD_2, ALOAD_3 ->
-				methodContext.push(methodContext.load((opcode + 2) % 4));
+				ALOAD_0, ALOAD_1, ALOAD_2, ALOAD_3 -> methodContext.push(methodContext.load((opcode + 2) % 4));
 			case IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD -> {
 				int index = (int) methodContext.pop();
-				Object[] arr = (Object[]) methodContext.pop();
-				methodContext.push(arr[index]);
+				methodContext.push(Array.get(methodContext.pop(), index));
 			}
-			case ISTORE, LSTORE, FSTORE, DSTORE, ASTORE -> {
+			case ISTORE -> {
+				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
+				Object toStore = methodContext.pop();
+				if (toStore instanceof Character) {
+					toStore = (int) (Character) toStore;
+				}
+				methodContext.store(index, toStore);
+			}
+			case LSTORE, FSTORE, DSTORE, ASTORE -> {
 				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
 				methodContext.store(index, methodContext.pop());
 			}
@@ -125,22 +140,18 @@ public class ExecutionEngine {
 				LSTORE_0, LSTORE_1, LSTORE_2, LSTORE_3,
 				FSTORE_0, FSTORE_1, FSTORE_2, FSTORE_3,
 				DSTORE_0, DSTORE_1, DSTORE_2, DSTORE_3,
-				ASTORE_0, ASTORE_1, ASTORE_2, ASTORE_3 ->
-				methodContext.store((opcode + 1) % 4, methodContext.pop());
+				ASTORE_0, ASTORE_1, ASTORE_2, ASTORE_3 -> methodContext.store((opcode + 1) % 4, methodContext.pop());
 			case IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE -> {
 				Object val = methodContext.pop();
 				int index = (int) methodContext.pop();
-				Object[] arr = (Object[]) methodContext.pop();
-				arr[index] = val;
+				Array.set(methodContext.pop(), index, val);
 			}
-			case POP ->
-				methodContext.pop();
+			case POP -> methodContext.pop();
 			case POP2 -> {
 				methodContext.pop();
 				methodContext.pop();
 			}
-			case DUP ->
-				methodContext.push(methodContext.peek());
+			case DUP -> methodContext.push(methodContext.peek());
 			case DUP_X1 -> {
 				Object val = methodContext.pop();
 				Object val2 = methodContext.pop();
@@ -199,14 +210,10 @@ public class ExecutionEngine {
 				methodContext.push(val);
 				methodContext.push(val2);
 			}
-			case IADD ->
-				methodContext.push((int) methodContext.pop() + (int) methodContext.pop());
-			case LADD ->
-				methodContext.push((long) methodContext.pop() + (long) methodContext.pop());
-			case FADD ->
-				methodContext.push((float) methodContext.pop() + (float) methodContext.pop());
-			case DADD ->
-				methodContext.push((double) methodContext.pop() + (double) methodContext.pop());
+			case IADD -> methodContext.push((int) methodContext.pop() + (int) methodContext.pop());
+			case LADD -> methodContext.push((long) methodContext.pop() + (long) methodContext.pop());
+			case FADD -> methodContext.push((float) methodContext.pop() + (float) methodContext.pop());
+			case DADD -> methodContext.push((double) methodContext.pop() + (double) methodContext.pop());
 			case ISUB -> {
 				int val2 = (int) methodContext.pop();
 				int val = (int) methodContext.pop();
@@ -227,14 +234,10 @@ public class ExecutionEngine {
 				Object val = methodContext.pop();
 				methodContext.push((double) val - (double) val2);
 			}
-			case IMUL ->
-				methodContext.push((int) methodContext.pop() * (int) methodContext.pop());
-			case LMUL ->
-				methodContext.push((long) methodContext.pop() * (long) methodContext.pop());
-			case FMUL ->
-				methodContext.push((float) methodContext.pop() * (float) methodContext.pop());
-			case DMUL ->
-				methodContext.push((double) methodContext.pop() * (double) methodContext.pop());
+			case IMUL -> methodContext.push((int) methodContext.pop() * (int) methodContext.pop());
+			case LMUL -> methodContext.push((long) methodContext.pop() * (long) methodContext.pop());
+			case FMUL -> methodContext.push((float) methodContext.pop() * (float) methodContext.pop());
+			case DMUL -> methodContext.push((double) methodContext.pop() * (double) methodContext.pop());
 			case IDIV -> {
 				Object val2 = methodContext.pop();
 				Object val = methodContext.pop();
@@ -275,21 +278,17 @@ public class ExecutionEngine {
 				Object val = methodContext.pop();
 				methodContext.push((double) val % (double) val2);
 			}
-			case INEG ->
-				methodContext.push((~(int) methodContext.pop()) + 1);
-			case FNEG ->
-				methodContext.push(-(float) methodContext.pop());
-			case LNEG ->
-				methodContext.push((~(long) methodContext.pop()) + 1);
-			case DNEG ->
-				methodContext.push(-(double) methodContext.pop());
+			case INEG -> methodContext.push((~(int) methodContext.pop()) + 1);
+			case FNEG -> methodContext.push(-(float) methodContext.pop());
+			case LNEG -> methodContext.push((~(long) methodContext.pop()) + 1);
+			case DNEG -> methodContext.push(-(double) methodContext.pop());
 			case ISHL -> {
 				Object val2 = methodContext.pop();
 				Object val = methodContext.pop();
 				methodContext.push((int) val << ((int) val2 & 0x1f));
 			}
 			case LSHL -> {
-				Object 	val2 = methodContext.pop();
+				Object val2 = methodContext.pop();
 				Object val = methodContext.pop();
 				methodContext.push((long) val << ((long) val2 & 0x3f));
 			}
@@ -531,8 +530,7 @@ public class ExecutionEngine {
 					branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
 				}
 			}
-			case GOTO ->
-				branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
+			case GOTO -> branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
 			case JSR -> {
 				branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
 				methodContext.push(currentInstruction + 3);
@@ -545,10 +543,8 @@ public class ExecutionEngine {
 				int index = ByteUtils.readUnsignedByte(instructions, currentInstruction + 1);
 				currentInstruction = (int) methodContext.load(index);
 			}
-			case TABLESWITCH ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case LOOKUPSWITCH ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case TABLESWITCH -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case LOOKUPSWITCH -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case GETSTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
@@ -609,17 +605,17 @@ public class ExecutionEngine {
 					methodContext.push(ret);
 				}
 			}
-			case INVOKEINTERFACE ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case INVOKEDYNAMIC ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case INVOKEINTERFACE -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case INVOKEDYNAMIC -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case NEW -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 				ClassInfo classInfo = (ClassInfo) method.owner.runtimeConstantPool[index - 1];
 				methodContext.push(classInfo.getKlass(owner).newInstance());
 			}
-			case NEWARRAY ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case NEWARRAY -> {
+				byte type = instructions[currentInstruction + 1];
+				methodContext.push(makeArray(type, (int) methodContext.pop()));
+			}
 			case ANEWARRAY -> {
 				int size = (int) methodContext.pop();
 				if (size < 0) {
@@ -631,21 +627,14 @@ public class ExecutionEngine {
 				Object arr = methodContext.pop();
 				int length = Array.getLength(arr);
 				methodContext.push(length);
- 			}
-			case ATHROW ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case CHECKCAST ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case INSTANCEOF ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case MONITORENTER ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case MONITOREXIT ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case WIDE ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case MULTIANEWARRAY ->
-				throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			}
+			case ATHROW -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case CHECKCAST -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case INSTANCEOF -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case MONITORENTER -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case MONITOREXIT -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case WIDE -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case MULTIANEWARRAY -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case IFNULL -> {
 				if (methodContext.pop() == null) {
 					branchOffset = ByteUtils.readShort(instructions, currentInstruction + 1);
@@ -659,10 +648,9 @@ public class ExecutionEngine {
 			case GOTO_W -> {
 				branchOffset = ByteUtils.readInt(instructions, currentInstruction + 1);
 			}
-			default ->
-				throw new UnsupportedOperationException("Unsupported opcode " + opcode);
+			default -> throw new UnsupportedOperationException("Unsupported opcode " + opcode);
 			}
-
+			
 			if (opcode != RET) {
 				if (branchOffset != 0) {
 					currentInstruction += branchOffset;
@@ -676,13 +664,42 @@ public class ExecutionEngine {
 			}
 		}
 		Profiler.finish(method);
-
 		//check to make sure we don't try to pop when the stack is expected to be empty
 		if (opcode != RETURN) {
 			return methodContext.pop();
 		} else {
 			return null;
 		}
+	}
+	
+	public Object makeArray(byte type, int size){
+		switch (type){
+			case 4 ->{
+				return new boolean[size];
+			}
+			case 5 ->{
+				return new char[size];
+			}
+			case 6 -> {
+				return new float[size];
+			}
+			case 7 -> {
+				return new double[size];
+			}
+			case 8 -> {
+				return new byte[size];
+			}
+			case 9 -> {
+				return new short[size];
+			}
+			case 10 -> {
+				return new int[size];
+			}
+			case 11 -> {
+				return new long[size];
+			}
+		}
+		throw new UnsupportedOperationException("Can not make array of type " + type);
 	}
 	
 	public void printAllProfileData() {

@@ -41,8 +41,7 @@ public abstract class Type {
 			) throw new IllegalArgumentException("Field descriptors may not use Void");
 			
 			return out;
-		}
-		catch (RuntimeException ex) {
+		} catch (RuntimeException ex) {
 			if (!(ex instanceof IllegalArgumentException)) {
 				ex = new IllegalArgumentException("Invalid descriptor '" + descriptor + "'", ex);
 			}
@@ -120,6 +119,7 @@ public abstract class Type {
 			case 'V':
 				return PrimitiveType.VOID;
 			case 'Z':
+				return PrimitiveType.BOOLEAN;
 			case 'B':
 				return PrimitiveType.BYTE;
 			case 'S':

@@ -1,9 +1,9 @@
 package dev.binclub.javaception.classfile.constants;
 
 import dev.binclub.javaception.*;
+import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
-import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.Type;
 
 public class ClassInfo {
@@ -25,7 +25,13 @@ public class ClassInfo {
 	
 	public Klass getKlass(Klass referencedBy) {
 		if (this.klass == null) {
-			this.klass = vm.systemDictionary.findReferencedClass(referencedBy, Type.classType(name));
+			Type type;
+			if (name.startsWith("[")) {
+				type = Type.parseFieldDescriptor(name);
+			} else {
+				type = Type.classType(name);
+			}
+			this.klass = vm.systemDictionary.findReferencedClass(referencedBy, type);
 		}
 		return this.klass;
 	}
