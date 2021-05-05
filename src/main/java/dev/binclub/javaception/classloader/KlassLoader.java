@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classloader;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.klass.ArrayKlass;
 import dev.binclub.javaception.klass.Klass;
@@ -14,12 +15,18 @@ import java.util.Map;
  * Used to lookup classes, typically from a file system
  */
 public class KlassLoader {
+	private final VirtualMachine vm;
+	
+	public KlassLoader(VirtualMachine vm) {
+		this.vm = vm;
+	}
+	
 	/**
 	 * Map of initiating classloader to created classes
 	 */
-	private static final Map<InstanceOop, Map<String, Klass>> classCache = new HashMap<>();
+	private final Map<InstanceOop, Map<String, Klass>> classCache = new HashMap<>();
 	
-	private static Map<String, Klass> getCache(InstanceOop classLoader) {
+	private Map<String, Klass> getCache(InstanceOop classLoader) {
 		return classCache.computeIfAbsent(classLoader, k -> new HashMap<>());
 	}
 	
@@ -32,7 +39,7 @@ public class KlassLoader {
 	 * @return A class representing this arrayType
 	 * @throws ClassNotFoundException The array could not be created because the inner class was not found
 	 */
-	public static Klass createArrayClass(Klass referencedBy, InstanceOop classLoader, ArrayType arrayType) {
+	public Klass createArrayClass(Klass referencedBy, InstanceOop classLoader, ArrayType arrayType) {
 		String name = arrayType.name;
 		
 		Map<String, Klass> cache = getCache(classLoader);
@@ -43,8 +50,8 @@ public class KlassLoader {
 		
 		Klass out;
 		if (arrayType.inner instanceof ClassType) {
-			Klass inner = SystemDictionary.findReferencedClass(referencedBy, (ClassType) arrayType.inner);
-			out = new ArrayKlass(classLoader, null, name, arrayType.dimensions, inner);
+			Klass inner = vm.systemDictionary.findReferencedClass(referencedBy, (ClassType) arrayType.inner);
+			out = new ArrayKlass(vm, classLoader, null, name, arrayType.dimensions, inner);
 		} else {
 			// TODO: primitive array support
 			throw new UnsupportedOperationException();
@@ -53,22 +60,25 @@ public class KlassLoader {
 		return out;
 	}
 	
-	public static Klass loadClass(InstanceOop classLoader, String name) throws ClassNotFoundException {
+	public Klass loadClass(InstanceOop classLoader, String name) throws ClassNotFoundException {
 		if (classLoader == null) {
 			// If referencedBy was defined by the boostrap class loader, then the bootstrap class loader initiates
 			// loading of the class denoted by className
 			
-			// TODO: bootstrap class loading logic
-			Klass out = BootstrapKlassLoader.loadClass(name);
+			Klass out = vm.bootstrapKlassLoader.loadClass(name);
 			if (out != null) {
 				return out;
 			} else {
 				// TODO: THIS IS UNSAFE
 				try {
-					return ClassFileParser.parse(KlassLoader.class.getClassLoader()
-						                      .getResourceAsStream(name + ".class"), null);
+					return ClassFileParser.parse(
+						vm,
+						KlassLoader.class.getClassLoader()
+							.getResourceAsStream(name + ".class"),
+						null
+					);
 				} catch (Throwable err) {
-				
+					err.printStackTrace();
 				}
 			}
 			throw new ClassNotFoundException(name);

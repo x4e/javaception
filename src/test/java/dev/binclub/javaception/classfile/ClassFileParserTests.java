@@ -1,11 +1,10 @@
 package dev.binclub.javaception.classfile;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.runtime.ExecutionEngine;
-import dev.binclub.javaception.type.ClassType;
-import dev.binclub.javaception.type.PrimitiveType;
-import dev.binclub.javaception.type.Type;
+import dev.binclub.javaception.type.*;
 import org.junit.jupiter.api.Test;
 import profiler.Profiler;
 
@@ -15,34 +14,36 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ClassFileParserTests {
 	@Test
 	public void testItself() {
-		Klass klass = SystemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
-		Klass stringKlass = SystemDictionary.java_lang_String();
-		MethodInfo init = stringKlass.findMethod("<init>",new Type[]{Type.arrayType(1, PrimitiveType.BYTE), PrimitiveType.VOID});
-		assertNotNull(init);
-		ExecutionEngine.invokeMethodObj(stringKlass, stringKlass.newInstance(), init, (Object) "Hello".getBytes());
+		var vm = new VirtualMachine();
+		var klass = vm.systemDictionary.findReferencedClass(null, Type.classType("dev/binclub/javaception/classfile/ClassFileParserTests"));
+		var string = vm.systemDictionary.java_lang_String()
+			.newInstance();
+		string.construct(
+			new Type[]{Type.arrayType(1, PrimitiveType.BYTE), PrimitiveType.VOID},
+			(Object) "Hello".getBytes()
+		);
 		
-		assertNotNull(klass);
 		int testsRan = 0;
 		for (MethodInfo method : klass.methods) {
 			if (method.name.equals("testField")) {
-				Object result = ExecutionEngine.invokeMethodObj(klass, null, method);
+				Object result = vm.executionEngine.invokeMethodObj(klass, null, method);
 				assertEquals(result, -5);
 				testsRan += 1;
 			} else if (method.name.equals("addTest")) {
-				Object result = ExecutionEngine.invokeMethodObj(klass, null, method, 5, 5);
+				Object result = vm.executionEngine.invokeMethodObj(klass, null, method, 5, 5);
 				assertEquals(result, 10);
 				testsRan += 1;
 			} else if (method.name.equals("testCreate")){
-				ExecutionEngine.invokeMethodObj(klass, null, method);
+				vm.executionEngine.invokeMethodObj(klass, null, method);
 				testsRan += 1;
 			} else if (method.name.equals("loopTest")) {
-				int result = (int) ExecutionEngine.invokeMethodObj(klass, null, method, 5);
+				int result = (int) vm.executionEngine.invokeMethodObj(klass, null, method, 5);
 				int expected = loopTest(5);
 				testsRan += 1;
 				assertEquals(result, expected);
 			}
 		}
-		ExecutionEngine.printAllProfileData();
+		vm.executionEngine.printAllProfileData();
 		if (testsRan != 4)
 			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}

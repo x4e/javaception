@@ -1,11 +1,14 @@
 package dev.binclub.javaception.runtime;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.CodeAttribute;
 import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classfile.OpcodeStride;
 import dev.binclub.javaception.classfile.constants.ClassInfo;
 import dev.binclub.javaception.classfile.constants.RefInfo;
 import dev.binclub.javaception.classfile.constants.StringInfo;
+import dev.binclub.javaception.event.EventSystem;
+import dev.binclub.javaception.event.events.MethodEnterEvent;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
@@ -18,16 +21,34 @@ import java.lang.reflect.Modifier;
 import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 
 public class ExecutionEngine {
+	private final VirtualMachine vm;
+	
+	public ExecutionEngine(VirtualMachine vm) {
+		this.vm = vm;
+	}
+	
 	// invokes method expecting a return obj to but put onto the caller stack
-	public static Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
-		if ((method.access & ACC_NATIVE) != 0) {
-			throw new UnsupportedOperationException("Native method not supported: " + owner + "." + method.name + method.signature);
-		}
+	public Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
 		if (!method.owner.resolved) {
 			method.owner.resolve();
 		}
+		
 		CodeAttribute code = method.code;
-		MethodContext methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
+		MethodContext methodContext = null;
+		if (code != null) {
+			methodContext = new MethodContext(code.getMaxStack(), code.getMaxLocals());
+		}		
+		
+		var event = vm.eventSystem.dispatch(new MethodEnterEvent(owner, instance, method, methodContext));
+		
+		// We can't handle native methods...
+		if ((method.access & ACC_NATIVE) != 0) {
+			throw new UnsupportedOperationException("Native method not supported: %s.%s%s".formatted(owner, method.name, method.signature));
+		}
+		
+		if (code == null) {
+			throw new IllegalArgumentException("Method %s.%s%s does not have code".formatted(owner, method.name, method.signature));
+		}
 
 		// Store arguments in local variables
 		{
@@ -75,7 +96,7 @@ public class ExecutionEngine {
 				} else if (constant instanceof ClassInfo) {
 					ClassInfo ci = (ClassInfo) constant;
 					Klass klazz = ci.getKlass(method.owner);
-					constant = klazz.getAsClass();
+					constant = klazz.asJavaLangClass();
 				}
 				methodContext.push(constant);
 			}
@@ -556,14 +577,14 @@ public class ExecutionEngine {
 				Object ret;
 				if (targetMethod.descriptor.length == 1) {
 					InstanceOop inst = (InstanceOop) methodContext.pop();
-					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod);
+					ret = this.invokeMethodObj(inst.getKlass(), inst, targetMethod);
 				} else {
 					Object[] params = new Object[targetMethod.descriptor.length - 1];
 					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
 					InstanceOop inst = (InstanceOop) methodContext.pop();
-					ret = ExecutionEngine.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
+					ret = this.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
 				}
 				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
@@ -576,13 +597,13 @@ public class ExecutionEngine {
 				MethodInfo targetMethod = methodOwner.methods[ref.getID(owner)];
 				Object ret;
 				if (targetMethod.descriptor.length == 1) {
-					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod);
+					ret = this.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod);
 				} else {
 					Object[] params = new Object[targetMethod.descriptor.length - 1];
 					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
 						params[param] = methodContext.pop();
 					}
-					ret = ExecutionEngine.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod, params);
+					ret = this.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod, params);
 				}
 				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
@@ -664,7 +685,7 @@ public class ExecutionEngine {
 		}
 	}
 	
-	public static void printAllProfileData() {
+	public void printAllProfileData() {
 		Profiler.dataMap.forEach((name, pdata) -> {
 			System.out.printf("%s took %d microseconds %n", name, pdata.getAverage() / 1000);
 		});

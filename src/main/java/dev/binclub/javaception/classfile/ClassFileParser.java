@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classfile;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.constants.*;
 import dev.binclub.javaception.classloader.KlassLoader;
 import dev.binclub.javaception.klass.Klass;
@@ -16,8 +17,25 @@ import static dev.binclub.javaception.classfile.ClassFileConstants.*;
 import static dev.binclub.javaception.utils.ByteUtils.*;
 
 public class ClassFileParser {
+	public static Klass parse(VirtualMachine vm, InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
+		return new ClassFileParser(vm, stream.readAllBytes(), loader).toKlass();
+	}
+	
+	public static Klass parse(VirtualMachine vm, ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
+		byte[] data = new byte[buffer.remaining()];
+		buffer.get(data);
+		return new ClassFileParser(vm, data, loader).toKlass();
+	}
+	
+	public static Klass parse(VirtualMachine vm, byte[] data, InstanceOop loader) throws ClassNotFoundException {
+		return new ClassFileParser(vm, data, loader).toKlass();
+	}
+	
+	
+		
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
+	private final VirtualMachine vm;
 	public final Object[] constantPool;
 	public final int majorVersion;
 	public final int minorVersion;
@@ -33,11 +51,12 @@ public class ClassFileParser {
 	public BootstrapMethod[] bootstrapMethods;
 	private int accessOffset;
 	
-	private ClassFileParser(byte[] data, InstanceOop loader) throws ClassNotFoundException {
-		this(data, 0, loader);
+	private ClassFileParser(VirtualMachine vm, byte[] data, InstanceOop loader) throws ClassNotFoundException {
+		this(vm, data, 0, loader);
 	}
 	
-	private ClassFileParser(byte[] data, int startOffset, InstanceOop loader) throws ClassNotFoundException {
+	private ClassFileParser(VirtualMachine vm, byte[] data, int startOffset, InstanceOop loader) throws ClassNotFoundException {
+		this.vm = vm;
 		this.data = data;
 		this.loader = loader;
 		
@@ -59,7 +78,7 @@ public class ClassFileParser {
 		className = ((ClassInfo) constantPool[classNameIndex - 1]).name;
 		int superClassNameIndex = readUnsignedShort(data, accessOffset + 4);
 		if (superClassNameIndex != 0) {
-			superClass = KlassLoader.loadClass(loader, ((ClassInfo) constantPool[superClassNameIndex - 1]).name);
+			superClass = vm.klassLoader.loadClass(loader, ((ClassInfo) constantPool[superClassNameIndex - 1]).name);
 		} else {
 			// should only happen if className == java/lang/Object
 			superClass = null;
@@ -70,7 +89,7 @@ public class ClassFileParser {
 		int fieldsOffset = accessOffset + 8;
 		for (int i = 0; i < interfacesCount; i++) {
 			 ClassInfo classInfo = (ClassInfo) constantPool[readUnsignedShort(data, fieldsOffset) - 1];
-			 interfaces[i] = KlassLoader.loadClass(loader, classInfo.name);
+			 interfaces[i] = vm.klassLoader.loadClass(loader, classInfo.name);
 			 fieldsOffset += 2;
 		}
 		
@@ -110,20 +129,6 @@ public class ClassFileParser {
 		sortFields();
 	}
 	
-	public static Klass parse(InputStream stream, InstanceOop loader) throws IOException, ClassNotFoundException {
-		return new ClassFileParser(stream.readAllBytes(), loader).toKlass();
-	}
-	
-	public static Klass parse(ByteBuffer buffer, InstanceOop loader) throws ClassNotFoundException {
-		byte[] data = new byte[buffer.remaining()];
-		buffer.get(data);
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
-	public static Klass parse(byte[] data, InstanceOop loader) throws ClassNotFoundException {
-		return new ClassFileParser(data, loader).toKlass();
-	}
-	
 	//fields are sorted so non static are first makes indexing easier
 	public void sortFields() {
 		List<FieldInfo> tempFields = new ArrayList<>(fields.length);
@@ -138,6 +143,7 @@ public class ClassFileParser {
 	
 	public Klass toKlass() {
 		return new Klass(
+			vm,
 			loader,
 			constantPool,
 			className,
@@ -237,8 +243,8 @@ public class ClassFileParser {
 			offset += 1;
 			switch (tag) {
 			case CONSTANT_Class:
-				constantPool[i] = new ClassInfo(readUnsignedShort(data, offset))
-					.resolve(constantPool);
+				constantPool[i] = new ClassInfo(vm, readUnsignedShort(data, offset))
+						.resolve(constantPool);
 				offset += 2;
 				break;
 			case CONSTANT_Double:
@@ -260,7 +266,7 @@ public class ClassFileParser {
 				RefInfo.RefType type = RefInfo.RefType.values()[tag - CONSTANT_Fieldref];
 				int classIndex = readUnsignedShort(data, offset);
 				int nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo(classIndex, nameAndTypeIndex, type)
+				constantPool[i] = new RefInfo(vm, classIndex, nameAndTypeIndex, type)
 					.resolve(constantPool);
 				offset += 4;
 				break;
@@ -297,7 +303,7 @@ public class ClassFileParser {
 				break;
 			case CONSTANT_String:
 				int stringIndex = readUnsignedShort(data, offset);
-				constantPool[i] = new StringInfo(stringIndex);
+				constantPool[i] = new StringInfo(vm, stringIndex);
 				offset += 2;
 				break;
 			case CONSTANT_Utf8:

@@ -1,16 +1,19 @@
 package dev.binclub.javaception.classfile.constants;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.Type;
 
 public class ClassInfo {
+	private final VirtualMachine vm;
 	public final int nameIndex;
 	public String name;
 	private Klass klass;
 	
-	public ClassInfo(int nameIndex) {
+	public ClassInfo(VirtualMachine vm, int nameIndex) {
+		this.vm = vm;
 		this.nameIndex = nameIndex;
 	}
 	
@@ -22,7 +25,7 @@ public class ClassInfo {
 	
 	public Klass getKlass(Klass referencedBy) {
 		if (this.klass == null) {
-			this.klass = SystemDictionary.findReferencedClass(referencedBy, Type.classType(name));
+			this.klass = vm.systemDictionary.findReferencedClass(referencedBy, Type.classType(name));
 		}
 		return this.klass;
 	}

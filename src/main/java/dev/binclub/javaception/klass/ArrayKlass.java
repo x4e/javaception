@@ -1,5 +1,6 @@
 package dev.binclub.javaception.klass;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.FieldInfo;
 import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.oop.InstanceOop;
@@ -13,13 +14,14 @@ public class ArrayKlass extends Klass {
 	public final Klass inner;
 	
 	public ArrayKlass(
+		VirtualMachine vm,
 		InstanceOop classLoader,
 		Object[] runtimeConstantPool,
 		String name,
 		int dimensions,
 		Klass inner
 	) {
-		super(classLoader, runtimeConstantPool, name, SystemDictionary.java_lang_Object(), new Klass[0], new FieldInfo[0], new MethodInfo[0]);
+		super(vm, classLoader, runtimeConstantPool, name, vm.systemDictionary.java_lang_Object(), new Klass[0], new FieldInfo[0], new MethodInfo[0]);
 		this.dimensions = dimensions;
 		this.inner = inner;
 	}

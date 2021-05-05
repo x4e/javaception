@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classloader;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.ClassFileParser;
 import dev.binclub.javaception.klass.Klass;
 
@@ -14,17 +15,19 @@ import java.util.Map;
 import static dev.binclub.javaception.utils.GenericUtils.sneakyThrow;
 
 public class BootstrapKlassLoader {
-	private static final Map<String, Runnable> pendingCreation = new HashMap<>();
-	private static final Map<String, Klass> bootstrapClasses = new HashMap<>();
+	private final VirtualMachine vm;
+	private final Map<String, Runnable> pendingCreation = new HashMap<>();
+	private final Map<String, Klass> bootstrapClasses = new HashMap<>();
 	
-	static {
+	public BootstrapKlassLoader(VirtualMachine vm) {
+		this.vm = vm;
 		var systemClassPath = ModuleFinder.ofSystem();
 		for (ModuleReference modRef : systemClassPath.findAll()) {
 			addToClassPath(modRef);
 		}
 	}
 	
-	public static Klass loadClass(String name) {
+	public Klass loadClass(String name) {
 		var pending = pendingCreation.get(name);
 		if (pending != null) {
 			pendingCreation.remove(name);
@@ -33,13 +36,13 @@ public class BootstrapKlassLoader {
 		return bootstrapClasses.get(name);
 	}
 	
-	public static void addToClassPath(Path... paths) {
+	public void addToClassPath(Path... paths) {
 		for (ModuleReference modRef : ModuleFinder.of(paths).findAll()) {
 			addToClassPath(modRef);
 		}
 	}
 	
-	public static void addToClassPath(ModuleReference modRef) {
+	public void addToClassPath(ModuleReference modRef) {
 		try {
 			var mod = modRef.open();
 			for (String name : mod.list().toArray(String[]::new)) {
@@ -64,16 +67,16 @@ public class BootstrapKlassLoader {
 		}
 	}
 	
-	public static void addToClassPath(String name, ByteBuffer buf) {
+	public void addToClassPath(String name, ByteBuffer buf) {
 		try {
-			addToClassPath(ClassFileParser.parse(buf, null));
+			addToClassPath(ClassFileParser.parse(vm, buf, null));
 		} catch (Throwable e) {
 			new ClassNotFoundException("Couldn't parse '%s'".formatted(name), e)
 				.printStackTrace();
 		}
 	}
 	
-	public static void addToClassPath(Klass klass) {
+	public void addToClassPath(Klass klass) {
 		bootstrapClasses.put(klass.name, klass);
 	}
 }

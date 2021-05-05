@@ -1,11 +1,13 @@
 package dev.binclub.javaception.classfile.constants;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.Type;
 
 public class RefInfo {
+	private final VirtualMachine vm;
 	public final int classIndex, nameAndTypeIndex;
 	public ClassInfo classInfo;
 	public NameAndTypeInfo nameAndTypeInfo;
@@ -14,7 +16,8 @@ public class RefInfo {
 	//index of field or method
 	private int id = -1;
 	
-	public RefInfo(int classIndex, int nameAndTypeIndex, RefType type) {
+	public RefInfo(VirtualMachine vm, int classIndex, int nameAndTypeIndex, RefType type) {
+		this.vm = vm;
 		this.classIndex = classIndex;
 		this.nameAndTypeIndex = nameAndTypeIndex;
 		this.type = type;
@@ -28,14 +31,14 @@ public class RefInfo {
 	
 	public Klass getOwner(Klass referencedBy) {
 		if (owner == null) {
-			this.owner = SystemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
+			this.owner = vm.systemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
 		}
 		return this.owner;
 	}
 	
 	public int getID(Klass referencedBy) {
 		if (owner == null || id == -1) {
-			Klass klazz = SystemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
+			Klass klazz = vm.systemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
 			this.owner = klazz;
 			switch (type) {
 			case FIELD -> {

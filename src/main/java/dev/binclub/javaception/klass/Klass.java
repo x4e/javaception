@@ -1,5 +1,6 @@
 package dev.binclub.javaception.klass;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.classfile.ClassFileConstants;
 import dev.binclub.javaception.classfile.FieldInfo;
 import dev.binclub.javaception.classfile.MethodInfo;
@@ -11,6 +12,7 @@ import dev.binclub.javaception.type.Type;
 import java.util.Arrays;
 
 public class Klass {
+	protected final VirtualMachine vm;
 	/**
 	 * The defining loader of this class.
 	 * Not necessarily the same as the initiating loader.
@@ -43,6 +45,7 @@ public class Klass {
 	int staticFieldCount;
 	
 	public Klass(
+		VirtualMachine vm,
 		InstanceOop classLoader,
 		Object[] runtimeConstantPool,
 		String name,
@@ -51,6 +54,7 @@ public class Klass {
 		FieldInfo[] fields,
 		MethodInfo[] methods
 	) {
+		this.vm = vm;
 		this.classLoader = classLoader;
 		this.runtimeConstantPool = runtimeConstantPool;
 		this.name = name;
@@ -117,23 +121,23 @@ public class Klass {
 		resolved = true;
 		for (MethodInfo method : methods) {
 			if (method.name.equals("<clinit>")) {
-				ExecutionEngine.invokeMethodObj(this, null, method);
+				vm.executionEngine.invokeMethodObj(this, null, method);
 			}
 		}
 	}
 	
 	public InstanceOop newInstance() {
-		return new InstanceOop(this, this.fields.length - this.staticFieldCount);
+		return new InstanceOop(vm, this, this.fields.length - this.staticFieldCount);
 	}
 	
 	InstanceOop asKlass;
 	static int nameId = -1;
 	
-	public InstanceOop getAsClass(){
+	public InstanceOop asJavaLangClass(){
 		if (asKlass == null) {
-			asKlass = SystemDictionary.java_lang_Class().newInstance();
+			asKlass = vm.systemDictionary.java_lang_Class().newInstance();
 			if(nameId == -1){
-				nameId = SystemDictionary.java_lang_Class().getFieldID("name" , "Ljava/lang/String;");
+				nameId = vm.systemDictionary.java_lang_Class().getFieldID("name" , "Ljava/lang/String;");
 				asKlass.fields[nameId] = name;
 			}
 		}

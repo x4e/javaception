@@ -1,5 +1,6 @@
 package dev.binclub.javaception.classloader;
 
+import dev.binclub.javaception.*;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.ArrayType;
@@ -16,7 +17,12 @@ import static dev.binclub.javaception.utils.GenericUtils.sneakyThrow;
  * Stores the loaded classes
  */
 public class SystemDictionary {
-	private static final Map<String, Set<Klass>> dictionary = new HashMap<>();
+	private final VirtualMachine vm;
+	private final Map<String, Set<Klass>> dictionary = new HashMap<>();
+	
+	public SystemDictionary(VirtualMachine vm) {
+		this.vm = vm;
+	}
 	
 	/**
 	 * Attempts to find the class with the given name.
@@ -26,17 +32,16 @@ public class SystemDictionary {
 	 * @param className    The name of the referenced class
 	 * @return The referenced class
 	 */
-	public static Klass findReferencedClass(Klass referencedBy, ClassType className) {
+	public Klass findReferencedClass(Klass referencedBy, ClassType className) {
 		try {
 			if (className instanceof ArrayType) {
-				return KlassLoader.createArrayClass(referencedBy, referencedBy.classLoader, (ArrayType) className);
-			}
-			else {
+				return vm.klassLoader.createArrayClass(referencedBy, referencedBy.classLoader, (ArrayType) className);
+			} else {
 				InstanceOop cl = null;
 				if (referencedBy != null) {
 					cl = referencedBy.classLoader;
 				}
-				return KlassLoader.loadClass(cl, className.name);
+				return vm.klassLoader.loadClass(cl, className.name);
 			}
 		} catch (ClassNotFoundException e) {
 			sneakyThrow(e);
@@ -47,8 +52,8 @@ public class SystemDictionary {
 	
 	/// Well known classes
 	
-	private static Klass java_lang_Object;
-	public static Klass java_lang_Object() {
+	private Klass java_lang_Object;
+	public Klass java_lang_Object() {
 		Klass klass = java_lang_Object;
 		if (klass == null) {
 			klass = findReferencedClass(null, Type.classType("java/lang/Object"));
@@ -57,8 +62,8 @@ public class SystemDictionary {
 		return klass;
 	}
 	
-	private static Klass java_lang_String;
-	public static Klass java_lang_String() {
+	private Klass java_lang_String;
+	public Klass java_lang_String() {
 		Klass klass = java_lang_String;
 		if (klass == null) {
 			klass = findReferencedClass(null, Type.classType("java/lang/String"));
@@ -67,23 +72,13 @@ public class SystemDictionary {
 		return klass;
 	}
 	
-	private static Klass java_lang_Class;
-	public static Klass java_lang_Class(){
+	private Klass java_lang_Class;
+	public Klass java_lang_Class(){
 		Klass klass = java_lang_Class;
 		if (klass == null) {
 			klass = findReferencedClass(null, Type.classType("java/lang/Class"));
 			java_lang_Class = klass;
 		}
 		return klass;
-	}
-	
-	public static InstanceOop createEmptyStringInstance(){
-		 Klass stringKlass = SystemDictionary.java_lang_String();
-		 int valID = stringKlass.getFieldID("value", "[B");
-		 int coderID = stringKlass.getFieldID("coder", "B");
-		 InstanceOop instance = stringKlass.newInstance();
-		 instance.fields[valID] = new byte[]{};
-		 instance.fields[coderID] = 0;
-		 return instance; 
-	}
+	}	
 }
