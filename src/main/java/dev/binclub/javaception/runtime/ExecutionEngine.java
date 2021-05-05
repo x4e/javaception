@@ -21,7 +21,7 @@ public class ExecutionEngine {
 	// invokes method expecting a return obj to but put onto the caller stack
 	public static Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
 		if ((method.access & ACC_NATIVE) != 0) {
-			throw new UnsupportedOperationException("Native methods are not yet supported " + method.name + " , " + method.signature);
+			throw new UnsupportedOperationException("Native method not supported: " + owner + "." + method.name + method.signature);
 		}
 		if (!method.owner.resolved) {
 			method.owner.resolve();

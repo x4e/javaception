@@ -139,4 +139,9 @@ public class Klass {
 		}
 		return asKlass;
 	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
 }
