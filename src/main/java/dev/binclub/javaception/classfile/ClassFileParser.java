@@ -35,7 +35,10 @@ public class ClassFileParser {
 		
 	private static final int FIRST_SUPPORTED_VERSION = V1_2;
 	private static final int LAST_SUPPORTED_VERSION = V16;
+	
 	private final VirtualMachine vm;
+	private final Klass klass;
+	
 	public final Object[] constantPool;
 	public final int majorVersion;
 	public final int minorVersion;
@@ -97,6 +100,15 @@ public class ClassFileParser {
 			throw new NoClassDefFoundError("%s is not a class because access_flag ACC_MODULE is set".formatted(className));
 		}
 		
+		klass = new Klass(
+			vm,
+			loader,
+			constantPool,
+			className,
+			superClass,
+			interfaces
+		);
+		
 		int fieldsCount = readUnsignedShort(data, fieldsOffset);
 		fields = new FieldInfo[fieldsCount];
 		int methodOffset = fieldsOffset + 2;
@@ -126,32 +138,13 @@ public class ClassFileParser {
 		}
 		
 		readClassAttributes(attributesOffset, constantPool);
-		sortFields();
-	}
-	
-	//fields are sorted so non static are first makes indexing easier
-	public void sortFields() {
-		List<FieldInfo> tempFields = new ArrayList<>(fields.length);
-		Collections.addAll(tempFields, fields);
-		tempFields.sort((f1, f2) -> {
-			boolean f1Static = (f1.access & ACC_STATIC) != 0;
-			boolean f2Static = (f2.access & ACC_STATIC) != 0;
-			return Boolean.compare(f1Static, f2Static);
-		});
-		fields = tempFields.toArray(fields);
+		
+		klass.setFields(fields);
+		klass.setMethods(methods);
 	}
 	
 	public Klass toKlass() {
-		return new Klass(
-			vm,
-			loader,
-			constantPool,
-			className,
-			superClass,
-			interfaces,
-			fields,
-			methods
-		);
+		return klass;
 	}
 	
 	private int readFieldAttributes(int offset, Object[] constantPool, FieldInfo field) {

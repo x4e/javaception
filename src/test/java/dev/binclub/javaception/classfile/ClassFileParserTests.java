@@ -5,8 +5,8 @@ import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.runtime.ExecutionEngine;
 import dev.binclub.javaception.type.*;
+import dev.binclub.javaception.profiler.Profiler;
 import org.junit.jupiter.api.Test;
-import profiler.Profiler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

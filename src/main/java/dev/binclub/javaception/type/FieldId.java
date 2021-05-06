@@ -1,14 +1,28 @@
 package dev.binclub.javaception.type;
 
+import dev.binclub.javaception.klass.*;
+
 import java.util.Objects;
 
 public class FieldId {
+	public final Klass owner;
 	public final String name;
 	public final Type type;
 	
-	public FieldId(String name, Type type) {
+	public FieldId(Klass owner, String name, Type type) {
+		this.owner = owner;
 		this.name = name;
 		this.type = type;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) return true;
+		if (!(other instanceof FieldId)) return false;
+		if (this.hashCode() != other.hashCode()) return false;
+		var otherField = (FieldId) other;
+		if (!this.name.equals(otherField.name)) return false;
+		return this.type.equals(otherField.type);
 	}
 	
 	private int _hash;

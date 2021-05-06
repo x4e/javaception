@@ -14,7 +14,7 @@ import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.type.Type;
 import dev.binclub.javaception.utils.ByteUtils;
-import profiler.Profiler;
+import dev.binclub.javaception.profiler.Profiler;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;

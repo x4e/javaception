@@ -1,25 +1,24 @@
 package dev.binclub.javaception.classfile;
 
 import dev.binclub.javaception.klass.Klass;
-import dev.binclub.javaception.type.Type;
+import dev.binclub.javaception.type.*;
 
 import java.util.Objects;
 
 public class MethodInfo {
 	public final int access;
-	public final String name;
-	public final Type[] descriptor;
-	public final String signature;
+	public final MethodId id;
 	public CodeAttribute code;
 	public Klass owner;
 	private int _hashcode = 0;
 	
-	public MethodInfo(int access, String name, String descriptor) {
-		this(access, name, Type.parseMethodDescriptor(descriptor), descriptor);
+	public MethodInfo(int access, Klass owner, String name, String descriptor) {
+		this(access, owner, name, Type.parseMethodDescriptor(descriptor));
 	}
 	
-	public MethodInfo(int access, String name, Type[] descriptor, String signature) {
+	public MethodInfo(int access, Klass owner, String name, Type[] descriptor) {
 		this.access = access;
+		this.id = new MethodId(owner, name, descriptor);
 		this.name = name;
 		this.descriptor = descriptor;
 		this.signature = signature;
@@ -37,18 +36,6 @@ public class MethodInfo {
 	
 	@Override
 	public String toString() {
-		var out = new StringBuilder(name)
-			.append('(');
-		for (int i = 0; i < descriptor.length; i++) {
-			var type = descriptor[i];
-			if (i < descriptor.length - 1) {
-				out.append(type);
-			} else {
-				// Last item must have ) first
-				out.append(')')
-					.append(type);
-			}
-		}
-		return out.toString();
+		return id.toString();
 	}
 }

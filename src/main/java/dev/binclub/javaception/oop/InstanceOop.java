@@ -14,6 +14,13 @@ public class InstanceOop extends Oop {
 		this.type = type;
 		fields = new Object[fieldCount];
 	}
+	
+	/**
+	 * Call the default constructor
+	 */
+	public void construct() {
+		construct(new Type[]{PrimitiveType.VOID});
+	}
 		
 	public void construct(Type[] types, Object... args) {
 		if (types.length < 1)
