@@ -7,6 +7,7 @@ import java.util.Objects;
 
 public class MethodInfo {
 	public final int access;
+	public final Klass owner;
 	public final MethodId id;
 	public CodeAttribute code;
 	public Klass owner;
@@ -18,7 +19,8 @@ public class MethodInfo {
 	
 	public MethodInfo(int access, Klass owner, String name, Type[] descriptor) {
 		this.access = access;
-		this.id = new MethodId(owner, name, descriptor);
+		this.owner = owner;
+		this.id = new MethodId(name, descriptor);
 		this.name = name;
 		this.descriptor = descriptor;
 		this.signature = signature;

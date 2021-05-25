@@ -1,4 +1,4 @@
-package profiler;
+package dev.binclub.javaception.profiler;
 
 import dev.binclub.javaception.classfile.MethodInfo;
 

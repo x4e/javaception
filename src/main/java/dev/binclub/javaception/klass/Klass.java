@@ -7,9 +7,9 @@ import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.classloader.SystemDictionary;
 import dev.binclub.javaception.oop.InstanceOop;
 import dev.binclub.javaception.runtime.ExecutionEngine;
-import dev.binclub.javaception.type.Type;
+import dev.binclub.javaception.type.*;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class Klass {
 	protected final VirtualMachine vm;
@@ -39,13 +39,21 @@ public class Klass {
 	 */
 	public final Object[] runtimeConstantPool;
 	
+	/**
+	 * Static members which are accessed directly through the klass rather than
+	 * an instance. These are not inherited at all from the superklass.
+	 */
 	public FieldInfo[] staticFields;
 	public MethodInfo[] staticMethods;
 	
+	/**
+	 * V-Tables. Contains the virtual methods and fields of this klass.
+  	 * These are inherited from the super klass.
+	 */
 	public FieldInfo[] virtualFields;
 	public MethodInfo[] virtualMethods;
 	
-	public Object[] staticFields;
+	public Object[] staticFieldValues;
 	public boolean resolved = false;
 	
 	public Klass(
@@ -69,27 +77,35 @@ public class Klass {
 	 * This should only be called by the classfile parser.
 	 */
 	public void setMethods(MethodInfo[] methods) {
-		if (this.methods == null)
+		if (this.virtualMethods != null)
 			throw new IllegalStateException("Cannot redeclare methods");
 		
-		var virtualMethods = new ArrayList<>();
-		var staticMethods = new ArrayList<>();
+		Map<MethodId, MethodInfo> virtualMethods = new LinkedHashMap<>(
+			(superKlass == null ? 0 : superKlass.virtualMethods.size()) + 10
+		);
+		List<MethodInfo> staticMethods = new ArrayList<>();
+		
+		if (superKlass != null) {
+			for (MethodInfo method : superKlass.virtualMethods) {
+				
+			}
+		}
 		
 		for (MethodInfo method : methods) {
 			if ((method.access & ClassFileConstants.ACC_STATIC) == 0) {
-				virtualMethods.add(method);
+				virtualMethods.put(method.id, method);
 			} else {
 				staticMethods.add(method);
 			}
 		}
 		
-		methods = virtualMethods.toArray();
-		this.staticMethods = staticMethods.toArray();
+		this.virtualMethods = virtualMethods.values().toArray(new MethodInfo[0]);
+		this.staticMethods = staticMethods.toArray(new MethodInfo[0]);
 		
 		if (superKlass != null) {
 			this.virtualMethods = Arrays.copyOf(
-				superKlass.methods,
-				superKlass.methods.length + methods.length
+				superKlass.virtualMethods,
+				superKlass.virtualMethodsethods.length + methods.length
 			);
 			for (int i = superKlass.methods.length; i < methods.length; i++) {
 				this.virtualMethods[i] = methods[i];
@@ -102,7 +118,7 @@ public class Klass {
 	 * This should only be called by the classfile parser.
 	 */
 	public void setFields(FieldInfo[] fields) {
-		if (this.fields == null)
+		if (this.virtualFields != null)
 			throw new IllegalStateException("Cannot redeclare fields");
 		
 		var virtualFields = new ArrayList<>();
@@ -115,9 +131,10 @@ public class Klass {
 				staticFields.add(field);
 			}
 		}
-		
+				
 		fields = virtualFields.toArray();
-		this.staticFields = virtualFields.toArray();
+		this.staticFields = staticFields.toArray();
+		staticFieldValues = new Object[this.staticFields.length];
 		
 		if (superKlass != null) {
 			this.virtualFields = Arrays.copyOf(

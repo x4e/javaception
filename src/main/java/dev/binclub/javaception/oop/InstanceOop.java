@@ -30,7 +30,7 @@ public class InstanceOop extends Oop {
 		if (types[types.length-1] != PrimitiveType.VOID)
 			throw new IllegalArgumentException("Constructor must return void");
 		
-		var method = type.findMethod("<init>", types);
+		var method = type.findVirtualMethod("<init>", types);
 		vm.executionEngine.invokeMethodObj(type, this, method, args);
 	}
 	
