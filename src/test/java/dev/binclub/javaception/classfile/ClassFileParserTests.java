@@ -23,8 +23,6 @@ public class ClassFileParserTests {
 			(Object) "Hello".getBytes()
 		);
 		
-		int testsRan = 0;
-		
 		assertEquals(
 			vm.executionEngine.invokeMethodObj(
 				klass,
@@ -61,8 +59,6 @@ public class ClassFileParserTests {
 			loopTest(5)
 		);
 		Profiler.printAllProfileData();
-		if (testsRan != 4)
-			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}
 	public int nonStaticField;
 	private static int field = -1;

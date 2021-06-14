@@ -104,6 +104,8 @@ public class Klass {
 			for (int i = superKlass.virtualMethods.length; i < methods.length; i++) {
 				this.virtualMethods[i] = methods[i];
 			}
+		} else {
+			this.virtualMethods = methods;
 		}
 	}
 	
@@ -141,6 +143,8 @@ public class Klass {
 				field.vindex = i;
 				this.virtualFields[i] = field;
 			}
+		} else {
+			this.virtualFields = fields;
 		}
 	}
 	
