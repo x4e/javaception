@@ -1,6 +1,7 @@
 package dev.binclub.javaception.oop;
 
 import dev.binclub.javaception.*;
+import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.*;
 
@@ -30,8 +31,17 @@ public class InstanceOop extends Oop {
 		if (types[types.length-1] != PrimitiveType.VOID)
 			throw new IllegalArgumentException("Constructor must return void");
 		
-		var method = type.findVirtualMethod("<init>", types);
-		vm.executionEngine.invokeMethodObj(type, this, method, args);
+		MethodInfo method = null;
+		
+		var searchType = type;
+		while (method == null && searchType != null) {
+			method = searchType.findVirtualMethod("<init>", types);
+			searchType = searchType.superKlass;
+		}
+		
+		if (method != null) {
+			vm.executionEngine.invokeMethodObj(type, this, method, args);
+		}
 	}
 	
 	public Klass getKlass() {
