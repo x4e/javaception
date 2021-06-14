@@ -154,7 +154,7 @@ public class Klass {
 	
 	public FieldInfo findStaticField(FieldId id) {
 		for (FieldInfo field : this.staticFields) {
-			if (id.equals(field)) {
+			if (id.equals(field.id)) {
 				return field;
 			}
 		}
@@ -167,7 +167,7 @@ public class Klass {
 	
 	public FieldInfo findVirtualField(FieldId id) {
 		for (FieldInfo field : this.virtualFields) {
-			if (id.equals(field)) {
+			if (id.equals(field.id)) {
 				return field;
 			}
 		}
@@ -180,7 +180,7 @@ public class Klass {
 	
 	public MethodInfo findStaticMethod(MethodId id) {
 		for (MethodInfo method : this.staticMethods) {
-			if (id.equals(method)) {
+			if (id.equals(method.id)) {
 				return method;
 			}
 		}
@@ -193,7 +193,7 @@ public class Klass {
 	
 	public MethodInfo findVirtualMethod(MethodId id) {
 		for (MethodInfo method : this.virtualMethods) {
-			if (id.equals(method)) {
+			if (id.equals(method.id)) {
 				return method;
 			}
 		}

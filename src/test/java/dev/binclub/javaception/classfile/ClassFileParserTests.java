@@ -7,6 +7,7 @@ import dev.binclub.javaception.runtime.ExecutionEngine;
 import dev.binclub.javaception.type.*;
 import dev.binclub.javaception.profiler.Profiler;
 import org.junit.jupiter.api.Test;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,6 +23,8 @@ public class ClassFileParserTests {
 			new Type[]{Type.arrayType(1, PrimitiveType.BYTE), PrimitiveType.VOID},
 			(Object) "Hello".getBytes()
 		);
+		
+		System.out.println(Arrays.toString(klass.staticMethods));
 		
 		assertEquals(
 			vm.executionEngine.invokeMethodObj(
