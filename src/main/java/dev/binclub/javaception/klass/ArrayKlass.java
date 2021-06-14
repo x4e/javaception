@@ -21,7 +21,14 @@ public class ArrayKlass extends Klass {
 		int dimensions,
 		Klass inner
 	) {
-		super(vm, classLoader, runtimeConstantPool, name, vm.systemDictionary.java_lang_Object(), new Klass[0], new FieldInfo[0], new MethodInfo[0]);
+		super(
+			vm,
+			classLoader,
+			runtimeConstantPool,
+			name,
+			vm.systemDictionary.java_lang_Object(),
+			new Klass[0]
+		);
 		this.dimensions = dimensions;
 		this.inner = inner;
 	}

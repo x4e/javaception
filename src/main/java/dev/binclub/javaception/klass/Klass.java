@@ -81,15 +81,9 @@ public class Klass {
 			throw new IllegalStateException("Cannot redeclare methods");
 		
 		Map<MethodId, MethodInfo> virtualMethods = new LinkedHashMap<>(
-			(superKlass == null ? 0 : superKlass.virtualMethods.size()) + 10
+			(superKlass == null ? 0 : superKlass.virtualMethods.length) + 10
 		);
 		List<MethodInfo> staticMethods = new ArrayList<>();
-		
-		if (superKlass != null) {
-			for (MethodInfo method : superKlass.virtualMethods) {
-				
-			}
-		}
 		
 		for (MethodInfo method : methods) {
 			if ((method.access & ClassFileConstants.ACC_STATIC) == 0) {
@@ -105,9 +99,9 @@ public class Klass {
 		if (superKlass != null) {
 			this.virtualMethods = Arrays.copyOf(
 				superKlass.virtualMethods,
-				superKlass.virtualMethodsethods.length + methods.length
+				superKlass.virtualMethods.length + methods.length
 			);
-			for (int i = superKlass.methods.length; i < methods.length; i++) {
+			for (int i = superKlass.virtualMethods.length; i < methods.length; i++) {
 				this.virtualMethods[i] = methods[i];
 			}
 		}
@@ -132,17 +126,20 @@ public class Klass {
 			}
 		}
 				
-		fields = virtualFields.toArray();
-		this.staticFields = staticFields.toArray();
+		fields = virtualFields.toArray(new FieldInfo[0]);
+		this.staticFields = staticFields.toArray(new FieldInfo[0]);
 		staticFieldValues = new Object[this.staticFields.length];
 		
 		if (superKlass != null) {
+			FieldInfo[] superFields = superKlass.virtualFields;
 			this.virtualFields = Arrays.copyOf(
-				superKlass.fields,
-				superKlass.fields.length + fields.length
+				superFields,
+				superFields.length + fields.length
 			);
-			for (int i = superKlass.fields.length; i < fields.length; i++) {
-				this.virtualFields[i] = fields[i];
+			for (int i = superFields.length; i < this.virtualFields.length; i++) {
+				var field = fields[i];
+				field.vindex = i;
+				this.virtualFields[i] = field;
 			}
 		}
 	}
@@ -153,7 +150,7 @@ public class Klass {
 	
 	public FieldInfo findStaticField(FieldId id) {
 		for (FieldInfo field : this.staticFields) {
-			if (id.equals(field.id)) {
+			if (id.equals(field)) {
 				return field;
 			}
 		}
@@ -166,33 +163,33 @@ public class Klass {
 	
 	public FieldInfo findVirtualField(FieldId id) {
 		for (FieldInfo field : this.virtualFields) {
-			if (id.equals(field.id)) {
+			if (id.equals(field)) {
 				return field;
 			}
 		}
 		return null;
 	}
 	
-	public MethodInfo findStaticMethod(String name, Type type) {
-		return findStaticMethod(new MethodId(name, type));
+	public MethodInfo findStaticMethod(String name, Type[] types) {
+		return findStaticMethod(new MethodId(name, types));
 	}
 	
 	public MethodInfo findStaticMethod(MethodId id) {
 		for (MethodInfo method : this.staticMethods) {
-			if (id.equals(method.id)) {
+			if (id.equals(method)) {
 				return method;
 			}
 		}
 		return null;
 	}
 	
-	public MethodInfo findVirtualMethod(String name, Type type) {
-		return findVirtualMethod(new MethodId(name, type));
+	public MethodInfo findVirtualMethod(String name, Type[] types) {
+		return findVirtualMethod(new MethodId(name, types));
 	}
 	
 	public MethodInfo findVirtualMethod(MethodId id) {
 		for (MethodInfo method : this.virtualMethods) {
-			if (id.equals(method.id)) {
+			if (id.equals(method)) {
 				return method;
 			}
 		}
@@ -201,14 +198,14 @@ public class Klass {
 
 	public void resolve() {
 		resolved = true;
-		var clinit = findMethod("<clinit>", new Type[]{PrimitiveType.VOID});
+		var clinit = findStaticMethod("<clinit>", new Type[]{PrimitiveType.VOID});
 		if (clinit != null) {
 			vm.executionEngine.invokeMethodObj(this, null, clinit);
 		}
 	}
 	
 	public InstanceOop newInstance() {
-		return new InstanceOop(vm, this, this.fields.length - this.staticFieldCount);
+		return new InstanceOop(vm, this, this.virtualFields.length);
 	}
 	
 	InstanceOop asKlass;
@@ -219,7 +216,11 @@ public class Klass {
 			asKlass = vm.systemDictionary.java_lang_Class().newInstance();
 			asKlass.construct();
 			if(nameId == -1){
-				nameId = vm.systemDictionary.java_lang_Class().getFieldID("name" , "Ljava/lang/String;");
+				var field = vm.systemDictionary.java_lang_Class().findVirtualField(
+					"name" , 
+					Type.classType(vm.systemDictionary.java_lang_String().name)
+				);
+				nameId = field.vindex;
 				asKlass.fields[nameId] = name;
 			}
 		}

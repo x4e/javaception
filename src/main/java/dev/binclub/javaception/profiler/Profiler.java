@@ -6,21 +6,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Profiler {
-	public static Map<String, ProfileData> dataMap = new HashMap<>();
+	public static Map<MethodInfo, ProfileData> dataMap = new HashMap<>();
 	
 	public static void start(MethodInfo method) {
-		String name = method.owner.name + ":" + method.name + ":" + method.signature;
-		ProfileData pd = Profiler.dataMap.get(name);
+		ProfileData pd = Profiler.dataMap.get(method);
 		if (pd == null) {
 			pd = new ProfileData();
-			Profiler.dataMap.put(name, pd);
+			Profiler.dataMap.put(method, pd);
 		}
 		pd.start = System.nanoTime();
 	}
 	
 	public static void finish(MethodInfo method) {
-		String name = method.owner.name + ":" + method.name + ":" + method.signature;
-		ProfileData pd = Profiler.dataMap.get(name);
+		ProfileData pd = Profiler.dataMap.get(method);
 		long dif = System.nanoTime() - pd.start;
 		pd.count++;
 		pd.totalTime += dif;
@@ -35,5 +33,11 @@ public class Profiler {
 			return this.totalTime / this.count;
 		}
 		
+	}
+	
+	public static void printAllProfileData() {
+		dataMap.forEach((method, pdata) -> {
+			System.out.printf("%s took %d microseconds %n", method, pdata.getAverage() / 1000);
+		});
 	}
 }

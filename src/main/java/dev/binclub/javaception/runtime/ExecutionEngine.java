@@ -48,11 +48,11 @@ public class ExecutionEngine {
 		
 		// We can't handle native methods...
 		if ((method.access & ACC_NATIVE) != 0) {
-			throw new UnsupportedOperationException("Native method not supported: %s.%s%s".formatted(owner, method.name, method.signature));
+			throw new UnsupportedOperationException("Native method not supported: %s.%s".formatted(owner, method));
 		}
 		
 		if (code == null) {
-			throw new IllegalArgumentException("Method %s.%s%s does not have code".formatted(owner, method.name, method.signature));
+			throw new IllegalArgumentException("Method %s.%s does not have code".formatted(owner, method));
 		}
 
 		// Store arguments in local variables
@@ -547,61 +547,66 @@ public class ExecutionEngine {
 			case LOOKUPSWITCH -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case GETSTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				methodContext.push(method.owner.staticFields[ref.getID(owner)]);
+				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var field = ref.getOwner(owner).findStaticField(ref.getId());
+				methodContext.push(ref.getOwner(owner).staticFieldValues[field.vindex]);
 			}
 			case PUTSTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				method.owner.staticFields[ref.getID(owner)] = methodContext.pop();
+				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var field = ref.getOwner(owner).findStaticField(ref.getId());
+				ref.getOwner(owner).staticFieldValues[field.vindex] = methodContext.pop();
 			}
 			case GETFIELD -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				methodContext.push(((InstanceOop) methodContext.pop()).fields[ref.getID(owner)]);
+				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var field = ref.getOwner(owner).findVirtualField(ref.getId());
+				var inst = (InstanceOop) methodContext.pop();
+				methodContext.push(inst.fields[field.vindex]);
 			}
 			case PUTFIELD -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				Object toPut = methodContext.pop();
-				((InstanceOop) methodContext.pop()).fields[ref.getID(owner)] = toPut;
+				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var field = ref.getOwner(owner).findVirtualField(ref.getId());
+				var value = methodContext.pop();
+				var inst = (InstanceOop) methodContext.pop();
+				inst.fields[field.vindex] = value;
 			}
 			case INVOKEVIRTUAL, INVOKESPECIAL -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				MethodInfo targetMethod = ref.getOwner(owner).methods[ref.getID(owner)];
-				Object ret;
-				if (targetMethod.descriptor.length == 1) {
-					InstanceOop inst = (InstanceOop) methodContext.pop();
-					ret = this.invokeMethodObj(inst.getKlass(), inst, targetMethod);
-				} else {
-					Object[] params = new Object[targetMethod.descriptor.length - 1];
-					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
-						params[param] = methodContext.pop();
-					}
-					InstanceOop inst = (InstanceOop) methodContext.pop();
-					ret = this.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
+				var ref = (RefInfo.MethodRef) method.owner.runtimeConstantPool[index - 1];
+				var targetMethod = ref.getOwner(owner).findVirtualMethod(ref.getId());
+				var methTypes = targetMethod.id.types;
+				
+				// Collect parameters from the stack
+				Object[] params = new Object[methTypes.length - 1]; // -1 to remove return val
+				for (int param = params.length - 1; param >= 0; param--) {
+					params[param] = methodContext.pop();
 				}
-				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
+				
+				InstanceOop inst = (InstanceOop) methodContext.pop();
+				
+				Object ret = this.invokeMethodObj(inst.getKlass(), inst, targetMethod, params);
+				
+				if (methTypes[methTypes.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
 				}
 			}
 			case INVOKESTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				RefInfo ref = (RefInfo) method.owner.runtimeConstantPool[index - 1];
-				Klass methodOwner = ref.getOwner(owner);
-				MethodInfo targetMethod = methodOwner.methods[ref.getID(owner)];
-				Object ret;
-				if (targetMethod.descriptor.length == 1) {
-					ret = this.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod);
-				} else {
-					Object[] params = new Object[targetMethod.descriptor.length - 1];
-					for (int param = targetMethod.descriptor.length - 2; param > -1; param--) {
-						params[param] = methodContext.pop();
-					}
-					ret = this.invokeMethodObj(methodOwner, InstanceOop._null(), targetMethod, params);
+				var ref = (RefInfo.MethodRef) method.owner.runtimeConstantPool[index - 1];
+				var targetMethod = ref.getOwner(owner).findStaticMethod(ref.getId());
+				var methTypes = targetMethod.id.types;
+				
+				// Collect parameters from the stack
+				Object[] params = new Object[methTypes.length - 1]; // -1 to remove return val
+				for (int param = params.length - 1; param >= 0; param--) {
+					params[param] = methodContext.pop();
 				}
-				if (targetMethod.descriptor[targetMethod.descriptor.length - 1] != PrimitiveType.VOID) {
+				
+				Object ret = this.invokeMethodObj(ref.getOwner(owner), null, targetMethod, params);
+				
+				if (methTypes[methTypes.length - 1] != PrimitiveType.VOID) {
 					methodContext.push(ret);
 				}
 			}
@@ -700,11 +705,5 @@ public class ExecutionEngine {
 			}
 		}
 		throw new UnsupportedOperationException("Can not make array of type " + type);
-	}
-	
-	public void printAllProfileData() {
-		Profiler.dataMap.forEach((name, pdata) -> {
-			System.out.printf("%s took %d microseconds %n", name, pdata.getAverage() / 1000);
-		});
-	}
+	}	
 }

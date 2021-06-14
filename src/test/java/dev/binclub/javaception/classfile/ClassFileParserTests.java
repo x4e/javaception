@@ -24,26 +24,43 @@ public class ClassFileParserTests {
 		);
 		
 		int testsRan = 0;
-		for (MethodInfo method : klass.methods) {
-			if (method.name.equals("testField")) {
-				Object result = vm.executionEngine.invokeMethodObj(klass, null, method);
-				assertEquals(result, -5);
-				testsRan += 1;
-			} else if (method.name.equals("addTest")) {
-				Object result = vm.executionEngine.invokeMethodObj(klass, null, method, 5, 5);
-				assertEquals(result, 10);
-				testsRan += 1;
-			} else if (method.name.equals("testCreate")){
-				vm.executionEngine.invokeMethodObj(klass, null, method);
-				testsRan += 1;
-			} else if (method.name.equals("loopTest")) {
-				int result = (int) vm.executionEngine.invokeMethodObj(klass, null, method, 5);
-				int expected = loopTest(5);
-				testsRan += 1;
-				assertEquals(result, expected);
-			}
-		}
-		vm.executionEngine.printAllProfileData();
+		
+		assertEquals(
+			vm.executionEngine.invokeMethodObj(
+				klass,
+				null,
+				klass.findStaticMethod("testField", Type.parseMethodDescriptor("()I"))
+			),
+			-5
+		);
+		assertEquals(
+			vm.executionEngine.invokeMethodObj(
+				klass,
+				null,
+				klass.findStaticMethod("addTest", Type.parseMethodDescriptor("(II)I")),
+				5,
+				5
+			),
+			10
+		);
+		assertEquals(
+			vm.executionEngine.invokeMethodObj(
+				klass,
+				null,
+				klass.findStaticMethod("testCreate", Type.parseMethodDescriptor("()V"))
+			),
+			null
+		);
+		assertEquals(
+			vm.executionEngine.invokeMethodObj(
+				klass,
+				null,
+				klass.findStaticMethod("loopTest", Type.parseMethodDescriptor("(I)I")),
+				5
+			),
+			loopTest(5)
+		);
+		Profiler.printAllProfileData();
 		if (testsRan != 4)
 			throw new IllegalStateException("Could not execute all methods, only " + testsRan + " found");
 	}

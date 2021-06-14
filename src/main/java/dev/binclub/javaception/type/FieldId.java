@@ -5,12 +5,10 @@ import dev.binclub.javaception.klass.*;
 import java.util.Objects;
 
 public class FieldId {
-	public final Klass owner;
 	public final String name;
 	public final Type type;
 	
-	public FieldId(Klass owner, String name, Type type) {
-		this.owner = owner;
+	public FieldId(String name, Type type) {
 		this.name = name;
 		this.type = type;
 	}

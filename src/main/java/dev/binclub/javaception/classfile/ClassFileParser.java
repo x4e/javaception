@@ -118,7 +118,7 @@ public class ClassFileParser {
 			String name = ((UtfInfo) constantPool[nameIndex - 1]).get();
 			int descriptorIndex = readUnsignedShort(data, methodOffset + 4);
 			String descriptor = ((UtfInfo) constantPool[descriptorIndex - 1]).get();
-			var field = new FieldInfo(access, name, descriptor);
+			var field = new FieldInfo(access, klass, name, descriptor);
 			methodOffset = readFieldAttributes(methodOffset + 6, constantPool, field);
 			fields[i] = field;
 		}
@@ -132,7 +132,7 @@ public class ClassFileParser {
 			String name = ((UtfInfo) constantPool[nameIndex - 1]).get();
 			int descriptorIndex = readUnsignedShort(data, attributesOffset + 4);
 			String descriptor = ((UtfInfo) constantPool[descriptorIndex - 1]).get();
-			var methodInfo = new MethodInfo(access, name, descriptor);
+			var methodInfo = new MethodInfo(access, klass, name, descriptor);
 			attributesOffset = readMethodAttributes(attributesOffset + 6, constantPool, methodInfo);
 			methods[i] = methodInfo;
 		}
@@ -254,12 +254,17 @@ public class ClassFileParser {
 				offset += 4;
 				break;
 			case CONSTANT_Fieldref:
-			case CONSTANT_Methodref:
-			case CONSTANT_InterfaceMethodref:
-				RefInfo.RefType type = RefInfo.RefType.values()[tag - CONSTANT_Fieldref];
 				int classIndex = readUnsignedShort(data, offset);
 				int nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo(vm, classIndex, nameAndTypeIndex, type)
+				constantPool[i] = new RefInfo.FieldRef(vm, classIndex, nameAndTypeIndex)
+					.resolve(constantPool);
+				offset += 4;
+				break;
+			case CONSTANT_Methodref:
+			case CONSTANT_InterfaceMethodref:
+				classIndex = readUnsignedShort(data, offset);
+				nameAndTypeIndex = readUnsignedShort(data, offset + 2);
+				constantPool[i] = new RefInfo.MethodRef(vm, classIndex, nameAndTypeIndex)
 					.resolve(constantPool);
 				offset += 4;
 				break;
