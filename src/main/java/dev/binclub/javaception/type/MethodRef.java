@@ -2,7 +2,7 @@ package dev.binclub.javaception.type;
 
 import dev.binclub.javaception.klass.*;
 
-import java.util.Objects;
+import java.util.Arrays;
 
 public class MethodRef {
 	public final Klass owner;
@@ -31,7 +31,7 @@ public class MethodRef {
 		var otherMethod = (MethodRef) other;
 		if (!this.owner.equals(otherMethod.owner)) return false;
 		if (!this.name.equals(otherMethod.name)) return false;
-		return this.descriptor.equals(otherMethod.descriptor);
+		return Arrays.equals(this.descriptor, otherMethod.descriptor);
 	}
 	
 	private int _hash;
@@ -39,9 +39,14 @@ public class MethodRef {
 	public int hashCode() {
 		int hash = _hash;
 		if (hash == 0) {
-			hash = Objects.hash(owner, name, descriptor);
+			hash = Arrays.deepHashCode(new Object[]{owner, name, descriptor});
 			_hash = hash;
 		}
 		return hash;
+	}
+	
+	@Override
+	public String toString() {
+		return "%s.%s".formatted(owner, toId());
 	}
 }

@@ -44,4 +44,9 @@ public class FieldRef {
 		}
 		return hash;
 	}
+	
+	@Override
+	public String toString() {
+		return "%s.%s".formatted(owner, toId());
+	}
 }
