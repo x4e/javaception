@@ -635,7 +635,38 @@ public class ExecutionEngine {
 			}
 			case ATHROW -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case CHECKCAST -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
-			case INSTANCEOF -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
+			case INSTANCEOF -> {
+				// todo implement checks for array types
+				Object objectref = methodContext.pop();
+				if (objectref == null) {
+					methodContext.push(0);
+				} else {
+					InstanceOop obj = (InstanceOop) objectref;
+					int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
+					ClassInfo toTestAgainst = (ClassInfo) owner.runtimeConstantPool[index - 1];
+					String targetClassName = toTestAgainst.name;
+					Klass level = obj.getKlass();
+					walkTop: 
+					while (!level.name.equals("java/lang/Object")) {
+						if (level.name.equals(targetClassName)) {
+							methodContext.push(1);
+							break;
+						} else {
+							if (level.superKlass.name.equals(targetClassName)) {
+								methodContext.push(1);
+								break;
+							}
+							for (Klass superKlass : level.interfaces) {
+								if (superKlass.name.equals(targetClassName)) {
+									methodContext.push(1);
+									break walkTop;
+								}
+							}
+						}
+						level = level.superKlass;
+					}
+				}
+			}
 			case MONITORENTER -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case MONITOREXIT -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case WIDE -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
