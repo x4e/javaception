@@ -10,7 +10,7 @@ import java.util.function.*;
 
 public class Natives {
 	private final VirtualMachine vm;
-	private final HashMap<MethodId, Consumer<MethodEnterEvent>> handlers;
+	private final HashMap<MethodRef, Consumer<MethodEnterEvent>> handlers;
 	
 	public Natives(VirtualMachine vm) {
 		this.vm = vm;
@@ -18,20 +18,21 @@ public class Natives {
 		vm.eventSystem.subscribe(MethodEnterEvent.class, this::onMethodEnter);
 		
 		handlers.put(
-			new MethodId("registerNatives", Type.parseMethodDescriptor("()V")), 
+			new MethodRef(vm.systemDictionary.java_lang_Class(), "registerNatives", Type.parseMethodDescriptor("()V")), 
 			this::java_lang_Class_registerNatives
 		);
 	}
 	
 	public void onMethodEnter(MethodEnterEvent event) {
 		var id = event.method.id;
-		var handler = handlers.get(id);
+		var ref = new MethodRef(event.owner, id);
+		var handler = handlers.get(ref);
 		if (handler != null) {
 			handler.accept(event);
 		}
 	}
 	
 	private void java_lang_Class_registerNatives(MethodEnterEvent event) {
-		
+		throw new IllegalStateException();
 	}
 }
