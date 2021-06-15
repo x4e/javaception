@@ -20,6 +20,7 @@ public class Klass {
 	 */
 	public final InstanceOop classLoader;
 	public final String name;
+	public final int access;
 	/**
 	 * Super Class - maybe null
 	 */
@@ -62,7 +63,8 @@ public class Klass {
 		Object[] runtimeConstantPool,
 		String name,
 		Klass superKlass,
-		Klass[] interfaces
+		Klass[] interfaces,
+		int access
 	) {
 		this.vm = vm;
 		this.classLoader = classLoader;
@@ -70,6 +72,7 @@ public class Klass {
 		this.name = name;
 		this.superKlass = superKlass;
 		this.interfaces = interfaces;
+		this.access = access;
 	}
 		
 	/**
@@ -139,7 +142,7 @@ public class Klass {
 				superFields.length + fields.length
 			);
 			for (int i = superFields.length; i < this.virtualFields.length; i++) {
-				var field = fields[i];
+				var field = fields[i - superFields.length];
 				field.vindex = i;
 				this.virtualFields[i] = field;
 			}

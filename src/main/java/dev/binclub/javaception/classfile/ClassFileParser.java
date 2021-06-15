@@ -106,7 +106,8 @@ public class ClassFileParser {
 			constantPool,
 			className,
 			superClass,
-			interfaces
+			interfaces,
+			access
 		);
 		
 		int fieldsCount = readUnsignedShort(data, fieldsOffset);
