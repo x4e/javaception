@@ -256,7 +256,7 @@ public class ClassFileParser {
 			case CONSTANT_Fieldref:
 				int classIndex = readUnsignedShort(data, offset);
 				int nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo.FieldRef(vm, classIndex, nameAndTypeIndex)
+				constantPool[i] = new RefInfo.Field(vm, classIndex, nameAndTypeIndex)
 					.resolve(constantPool);
 				offset += 4;
 				break;
@@ -264,7 +264,7 @@ public class ClassFileParser {
 			case CONSTANT_InterfaceMethodref:
 				classIndex = readUnsignedShort(data, offset);
 				nameAndTypeIndex = readUnsignedShort(data, offset + 2);
-				constantPool[i] = new RefInfo.MethodRef(vm, classIndex, nameAndTypeIndex)
+				constantPool[i] = new RefInfo.Method(vm, classIndex, nameAndTypeIndex)
 					.resolve(constantPool);
 				offset += 4;
 				break;

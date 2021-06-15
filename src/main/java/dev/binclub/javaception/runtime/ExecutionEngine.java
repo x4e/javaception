@@ -547,26 +547,26 @@ public class ExecutionEngine {
 			case LOOKUPSWITCH -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case GETSTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Field) method.owner.runtimeConstantPool[index - 1];
 				var field = ref.getOwner(owner).findStaticField(ref.getId());
 				methodContext.push(ref.getOwner(owner).staticFieldValues[field.vindex]);
 			}
 			case PUTSTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Field) method.owner.runtimeConstantPool[index - 1];
 				var field = ref.getOwner(owner).findStaticField(ref.getId());
 				ref.getOwner(owner).staticFieldValues[field.vindex] = methodContext.pop();
 			}
 			case GETFIELD -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Field) method.owner.runtimeConstantPool[index - 1];
 				var field = ref.getOwner(owner).findVirtualField(ref.getId());
 				var inst = (InstanceOop) methodContext.pop();
 				methodContext.push(inst.fields[field.vindex]);
 			}
 			case PUTFIELD -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.FieldRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Field) method.owner.runtimeConstantPool[index - 1];
 				var field = ref.getOwner(owner).findVirtualField(ref.getId());
 				var value = methodContext.pop();
 				var inst = (InstanceOop) methodContext.pop();
@@ -574,7 +574,7 @@ public class ExecutionEngine {
 			}
 			case INVOKEVIRTUAL, INVOKESPECIAL -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.MethodRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Method) method.owner.runtimeConstantPool[index - 1];
 				var targetMethod = ref.getOwner(owner).findVirtualMethod(ref.getId());
 				var methTypes = targetMethod.id.types;
 				
@@ -594,7 +594,7 @@ public class ExecutionEngine {
 			}
 			case INVOKESTATIC -> {
 				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				var ref = (RefInfo.MethodRef) method.owner.runtimeConstantPool[index - 1];
+				var ref = (RefInfo.Method) method.owner.runtimeConstantPool[index - 1];
 				var targetMethod = ref.getOwner(owner).findStaticMethod(ref.getId());
 				var methTypes = targetMethod.id.types;
 				
