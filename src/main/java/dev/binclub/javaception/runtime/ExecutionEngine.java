@@ -9,11 +9,8 @@ import dev.binclub.javaception.classfile.constants.RefInfo;
 import dev.binclub.javaception.classfile.constants.StringInfo;
 import dev.binclub.javaception.event.EventSystem;
 import dev.binclub.javaception.event.events.MethodEnterEvent;
-import dev.binclub.javaception.klass.ArrayKlass;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.oop.InstanceOop;
-import dev.binclub.javaception.type.ArrayType;
-import dev.binclub.javaception.type.ClassType;
 import dev.binclub.javaception.type.PrimitiveType;
 import dev.binclub.javaception.type.Type;
 import dev.binclub.javaception.utils.ByteUtils;
@@ -22,6 +19,7 @@ import dev.binclub.javaception.profiler.Profiler;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -647,58 +645,35 @@ public class ExecutionEngine {
 			case INSTANCEOF -> {
 				// todo implement checks for array types
 				Object objectref = methodContext.pop();
-				int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
-				ClassInfo toTestAgainst = (ClassInfo) owner.runtimeConstantPool[index - 1];
 				if (objectref == null) {
 					methodContext.push(0);
 				} else {
-					if (objectref.getClass().isArray()) {
-						Type type = Type.parseSingleType(toTestAgainst.name);
-						if (type instanceof ArrayType) {
-							ArrayType arrayType = (ArrayType) type;
-							if (arrayType.inner instanceof PrimitiveType) {
-								PrimitiveType primitiveType = (PrimitiveType) arrayType.inner;
-								if (primitiveType.jvmClass.equals(objectref.getClass().getComponentType())) {
-									methodContext.push(1);
-								} else {
-									methodContext.push(0);
-								}
-							} else {
-								// check objectref component type can be cast to target type
-							}
-						} else if ((toTestAgainst.getKlass(owner).access & 0x200) != 0) {
-							// check if objectref component type implement target type
-						} else {
-							if (toTestAgainst.name.equals("java/lang/Object")) {
-								methodContext.push(1);
-							} else {
-								methodContext.push(0);
-							}
+					InstanceOop obj = (InstanceOop) objectref;
+					int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
+					ClassInfo targetInfo = (ClassInfo) owner.runtimeConstantPool[index - 1];
+					Klass target = vm.systemDictionary.findReferencedClass(
+						owner,
+						Type.classType(targetInfo.name)
+					);
+					
+					var search = new ArrayDeque<Klass>();
+					search.add(obj.getKlass());
+					
+					boolean found = false;
+					while (!search.isEmpty()) {
+						Klass k = search.remove();
+						if (k == target) {
+							found = true;
+							break;
 						}
-					} else {
-						InstanceOop obj = (InstanceOop) objectref;
-						String targetClassName = toTestAgainst.name;
-						Klass level = obj.getKlass();
-						walkTop:
-						while (!level.name.equals("java/lang/Object")) {
-							if (level.name.equals(targetClassName)) {
-								methodContext.push(1);
-								break;
-							} else {
-								if (level.superKlass.name.equals(targetClassName)) {
-									methodContext.push(1);
-									break;
-								}
-								for (Klass superKlass : level.interfaces) {
-									if (superKlass.name.equals(targetClassName)) {
-										methodContext.push(1);
-										break walkTop;
-									}
-								}
+						if (k != vm.systemDictionary.java_lang_Object()) {
+							search.add(k.superKlass);
+							for (Klass i : k.interfaces) {
+								search.add(i);
 							}
-							level = level.superKlass;
 						}
 					}
+					methodContext.push(found ? 1 : 0);
 				}
 			}
 			case MONITORENTER -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
