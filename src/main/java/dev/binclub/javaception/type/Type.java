@@ -92,6 +92,10 @@ public abstract class Type {
 		}
 	}
 	
+	public static Type parseSingleType(String name) {
+		return parseSingleType(name.toCharArray(), 0, new int[1]);
+	}
+	
 	private static Type parseSingleType(char[] chars, int offset, int[] offsetOut) {
 		try {
 			char first = chars[offset];

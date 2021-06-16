@@ -22,10 +22,10 @@ public class InstanceofTests {
 	}
 	
 	public static boolean doTest() {
-		return InstanceofTests.isSerializable(new ArrayList<>());
+		return InstanceofTests.isSerializable(new byte[]{});
 	}
 	
 	public static boolean isSerializable(Object obj) {
-		return obj instanceof Serializable;
+		return obj instanceof byte[];
 	}
 }
