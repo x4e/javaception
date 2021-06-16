@@ -33,6 +33,7 @@ public class Natives {
 	}
 	
 	private void java_lang_Class_registerNatives(MethodEnterEvent event) {
-		throw new IllegalStateException();
+		// no op: force early return
+		event.forceEarlyReturn(null);
 	}
 }

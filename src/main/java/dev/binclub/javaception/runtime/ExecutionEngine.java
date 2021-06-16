@@ -45,8 +45,14 @@ public class ExecutionEngine {
 		}		
 		
 		var event = vm.eventSystem.dispatch(new MethodEnterEvent(owner, instance, method, methodContext));
+		if (event.returnValue == null) {
+			return null;
+		}
+		if (event.returnValue.isPresent()) {
+			return event.returnValue.get();
+		}
 		
-		// We can't handle native methods...
+		// Native methods should've been handled by the event listeners
 		if ((method.access & ACC_NATIVE) != 0) {
 			throw new UnsupportedOperationException("Native method not supported: %s.%s".formatted(owner, method));
 		}

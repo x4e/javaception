@@ -104,8 +104,8 @@ public class Klass {
 				superKlass.virtualMethods,
 				superKlass.virtualMethods.length + methods.length
 			);
-			for (int i = superKlass.virtualMethods.length; i < methods.length; i++) {
-				this.virtualMethods[i] = methods[i];
+			for (int i = 0; i < methods.length; i++) {
+				this.virtualMethods[superKlass.virtualMethods.length + i] = methods[i];
 			}
 		} else {
 			this.virtualMethods = methods;
@@ -141,10 +141,10 @@ public class Klass {
 				superFields,
 				superFields.length + fields.length
 			);
-			for (int i = superFields.length; i < this.virtualFields.length; i++) {
-				var field = fields[i - superFields.length];
+			for (int i = 0; i < fields.length; i++) {
+				var field = fields[ i];
 				field.vindex = i;
-				this.virtualFields[i] = field;
+				this.virtualFields[superFields.length +i] = field;
 			}
 		} else {
 			this.virtualFields = fields;
