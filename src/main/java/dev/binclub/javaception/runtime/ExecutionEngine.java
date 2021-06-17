@@ -33,8 +33,15 @@ public class ExecutionEngine {
 		this.vm = vm;
 	}
 	
-	// invokes method expecting a return obj to but put onto the caller stack
+	/**
+	 * Invoke the given method using the provided instance and arguments.
+	 * The return value of the method will be returned, or null if the method was void.
+	 */
 	public Object invokeMethodObj(Klass owner, InstanceOop instance, MethodInfo method, Object... args) {
+		Objects.requireNonNull(owner, "owner");
+		Objects.requireNonNull(method, "method");
+		Objects.requireNonNull(args, "args");
+		
 		if (!method.owner.resolved) {
 			method.owner.resolve();
 		}
@@ -644,17 +651,15 @@ public class ExecutionEngine {
 			case CHECKCAST -> throw new UnsupportedOperationException("Opcode not supported " + opcode);
 			case INSTANCEOF -> {
 				// todo implement checks for array types
-				Object objectref = methodContext.pop();
+				var obj = (InstanceOop) methodContext.pop();
+				
+				// Null is not an instance of any type
 				if (objectref == null) {
 					methodContext.push(0);
 				} else {
-					InstanceOop obj = (InstanceOop) objectref;
 					int index = ByteUtils.readUnsignedShort(instructions, currentInstruction + 1);
 					ClassInfo targetInfo = (ClassInfo) owner.runtimeConstantPool[index - 1];
-					Klass target = vm.systemDictionary.findReferencedClass(
-						owner,
-						Type.classType(targetInfo.name)
-					);
+					Klass target = targetInfo.getKlass(owner);
 					
 					var search = new ArrayDeque<Klass>();
 					search.add(obj.getKlass());
@@ -666,7 +671,10 @@ public class ExecutionEngine {
 							found = true;
 							break;
 						}
+						
+						// Objects do not have superclasses or interfaces
 						if (k != vm.systemDictionary.java_lang_Object()) {
+							// We need to check if any of this class's superclass or interfaces match
 							search.add(k.superKlass);
 							for (Klass i : k.interfaces) {
 								search.add(i);
@@ -697,6 +705,8 @@ public class ExecutionEngine {
 			}
 			
 			if (opcode != RET) {
+				// TODO: I think this prevents infinite loops on the same instruction
+				// i.e. a: goto a
 				if (branchOffset != 0) {
 					currentInstruction += branchOffset;
 					opcode = ByteUtils.readUnsignedByte(instructions, currentInstruction);

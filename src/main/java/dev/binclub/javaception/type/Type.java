@@ -6,7 +6,13 @@ import java.util.Objects;
 public abstract class Type {
 	public static ClassType classType(String className) {
 		Objects.requireNonNull(className, "className");
-		if (className.length() < 1 || className.charAt(className.length() - 1) == ';') {
+		if (
+			// Class names cannot be empty
+			className.length() < 1 ||
+			// ; is not a valid character in a class's name (neither is ., [ or /).
+			// If the name ends with ; it was likely accidentally provided in descriptor form.
+			className.charAt(className.length() - 1) == ';'
+		) {
 			throw new IllegalArgumentException(className);
 		}
 		return new ClassType(className);

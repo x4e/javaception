@@ -17,31 +17,39 @@ public class InstanceOop extends Oop {
 	}
 	
 	/**
-	 * Call the default constructor
+	 * Call the default constructor.
+	 * Will throw an exception if it does not exist.
 	 */
 	public void construct() {
 		construct(new Type[]{PrimitiveType.VOID});
 	}
-		
+	
+	/**
+	 * Call the constructor with the given descriptor.
+	 * 
+	 * This should only be done once per instance, and should always be done
+	 * before attempting to use the instance.
+	 */
 	public void construct(Type[] types, Object... args) {
 		if (types.length < 1)
 			throw new IllegalArgumentException("No return type");
 		if (types.length - 1 != args.length) // one less arg because return type
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Wrong number of parameters");
 		if (types[types.length-1] != PrimitiveType.VOID)
 			throw new IllegalArgumentException("Constructor must return void");
 		
 		MethodInfo method = null;
 		
+		// TODO: Only search for constructors in the direct class, ignoring inherited constructors
 		var searchType = type;
 		while (method == null && searchType != null) {
 			method = searchType.findVirtualMethod("<init>", types);
 			searchType = searchType.superKlass;
 		}
 		
-		if (method != null) {
-			vm.executionEngine.invokeMethodObj(type, this, method, args);
-		}
+		Objects.requireNonNull(method, "Could not find constructor");
+		
+		vm.executionEngine.invokeMethodObj(type, this, method, args);
 	}
 	
 	public Klass getKlass() {

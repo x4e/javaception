@@ -34,6 +34,7 @@ public class SystemDictionary {
 	public Klass findReferencedClass(Klass referencedBy, Type className) {
 		try {
 			if (className instanceof ArrayType) {
+				// TODO: primitive arrays should always be cached. Object arrays requested by same classloader should be cached.
 				return vm.klassLoader.createArrayClass(referencedBy, referencedBy.classLoader, (ArrayType) className);
 			} else if (className instanceof ClassType) {
 				var classType = (ClassType) className;

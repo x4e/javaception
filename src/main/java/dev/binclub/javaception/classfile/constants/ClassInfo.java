@@ -26,6 +26,9 @@ public class ClassInfo {
 	public Klass getKlass(Klass referencedBy) {
 		if (this.klass == null) {
 			Type type;
+			// The spec does not properly explain whether array names should be
+			// permitted in CONSTANT_Class_info structures, however they do appear
+			// inside of them in practice.
 			if (name.startsWith("[")) {
 				type = Type.parseFieldDescriptor(name);
 			} else {

@@ -29,7 +29,7 @@ public abstract class RefInfo<A, B> {
 	
 	public Klass getOwner(Klass referencedBy) {
 		if (owner == null) {
-			this.owner = vm.systemDictionary.findReferencedClass(referencedBy, Type.classType(classInfo.name));
+			this.owner = classInfo.getKlass(referencedBy);
 		}
 		return this.owner;
 	}
