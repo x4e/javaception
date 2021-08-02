@@ -26,7 +26,12 @@ Javaception has an official git repository hosted at `https://git.sr.ht/~x4e/jav
 
 You can edit files in the repository and test them by running `mvn verify` (make sure you have maven and a jdk installed).
 
-Once you are happy with your changes you can submit them by following the guide here: https://git-send-email.io/.
+Once you are happy with your changes you can submit them by following the guide at https://git-send-email.io/ and using the mailing list `~x4e/javaception@lists.sr.ht`.
+
+# Discussion and Support
+
+If you want to discuss the project, request support, or just send your appreciation, send an email to the official mailing list at `~x4e/javaception@lists.sr.ht`.
+You can also subscribe to the mailing list at https://lists.sr.ht/~x4e/javaception.
 
 # Licensing
 
