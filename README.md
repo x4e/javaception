@@ -20,9 +20,17 @@ A Java Virtual Machine - running on a Java Virtual Machine - running on a (jk).
 * Class file verification
 * Alternative specs like JDK, JDWP, JVMTI etc
 
+# Contributing
+
+Javaception has an official git repository hosted at `https://git.sr.ht/~x4e/javaception` and `git@git.sr.ht:~x4e/javaception`.
+
+You can edit files in the repository and test them by running `mvn verify` (make sure you have maven and a jdk installed).
+
+Once you are happy with your changes you can submit them by following the guide here: https://git-send-email.io/.
+
 # Licensing
 
-Javaception: A Java Virtual Machine implementation written in Java
+Javaception: A Java Virtual Machine implementation written in Java.
 Copyright (C) 2021  x4e
 
 This program is free software: you can redistribute it and/or modify
