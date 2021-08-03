@@ -6,8 +6,8 @@ public class MethodContext {
 	int stackPointer = 0;
 	
 	public MethodContext(int maxStack, int maxLocals) {
-		localVariables = new Object[maxLocals];
-		stack = new Object[maxStack];
+		localVariables = new Object[maxLocals + 1];
+		stack = new Object[maxStack + 1];
 	}
 	
 	public void push(Object obj) {

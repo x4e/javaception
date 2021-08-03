@@ -19,7 +19,11 @@ public class Natives {
 		
 		handlers.put(
 			new MethodRef(vm.systemDictionary.java_lang_Class(), "registerNatives", Type.parseMethodDescriptor("()V")), 
-			this::java_lang_Class_registerNatives
+			this::noop
+		);
+		handlers.put(
+			new MethodRef(vm.systemDictionary.java_lang_Class(), "desiredAssertionStatus0", Type.parseMethodDescriptor("(Ljava/lang/Class;)Z")), 
+			this::noop
 		);
 	}
 	
@@ -32,7 +36,8 @@ public class Natives {
 		}
 	}
 	
-	private void java_lang_Class_registerNatives(MethodEnterEvent event) {
+	// NOP method implementation for native methods that shouldnt do anything
+	private void noop(MethodEnterEvent event) {
 		// no op: force early return
 		event.forceEarlyReturn(null);
 	}

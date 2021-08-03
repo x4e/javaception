@@ -5,6 +5,8 @@ import dev.binclub.javaception.classfile.MethodInfo;
 import dev.binclub.javaception.klass.Klass;
 import dev.binclub.javaception.type.*;
 
+import java.util.Objects;
+
 public class InstanceOop extends Oop {
 	private final VirtualMachine vm;
 	private final Klass type;

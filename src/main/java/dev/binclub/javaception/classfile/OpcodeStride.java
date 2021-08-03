@@ -31,11 +31,16 @@ public class OpcodeStride {
 		strideAmount[MULTIANEWARRAY] = 3;
 		setRange(IFNULL, IFNONNULL, 2);
 		setRange(GOTO_W, JSR_W, 4);
+		strideAmount[BREAKPOINT] = 1;
 	}
 	
 	public static int getStrideAmount(int opcode, int offset, byte[] instructions) {
 		int stride = strideAmount[opcode];
 		
+		if (stride == 0) {
+			strideAmount[opcode] = 1;
+			return 1;
+		}
 		if (stride != -1) {
 			return stride;
 		}

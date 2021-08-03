@@ -1,5 +1,7 @@
 package dev.binclub.javaception.classfile;
 
+import java.lang.reflect.Field;
+
 @SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class ClassFileConstants {
 	public static final int CLASS_MAGIC = 0xCAFEBABE;
@@ -292,5 +294,41 @@ public class ClassFileConstants {
 	public static final int IFNONNULL = 199;
 	public static final int GOTO_W = 200;
 	public static final int JSR_W = 201;
-	public static final int OPC_MAX = 201;
+	public static final int BREAKPOINT = 202;
+	public static final int IMPDEP1 = 254;
+	public static final int IMPDEP2 = 255;
+	public static final int OPC_MAX = IMPDEP2;
+	
+	private static final String[] MNEUMONICS = new String[OPC_MAX + 1];
+	
+	public static final String opcMneumonic(int opc) {
+		String out = MNEUMONICS[opc];
+		if (out == null) {
+			out = Integer.toHexString(opc);
+		}
+		return out;
+	}
+	
+	static {
+		boolean start = false;
+		for (Field f : ClassFileConstants.class.getFields()) {
+			if (!start) {
+				if ("NOP".equals(f.getName())) {
+					start = true;
+				} else {
+					continue;
+				}
+			}
+			
+			if ("OPC_MAX".equals(f.getName())) {
+				break;
+			}
+			
+			try {
+				MNEUMONICS[f.getInt(null)] = f.getName();
+			} catch (Throwable t) {
+				throw new RuntimeException(t);
+			}
+		}
+	}
 }
